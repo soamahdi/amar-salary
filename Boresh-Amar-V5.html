@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مدیریت تولید</title>
+<style>
+  /* کانتینر اصلی که جدول را در خود نگه می‌دارد */
+#customerList {
+    width: 100%;
+    overflow-x: auto; /* اگر جدول بزرگتر از صفحه شد، فقط خودش اسکرول بخورد */
+    -webkit-overflow-scrolling: touch; /* برای اسکرول نرم‌تر در آیفون */
+}
+
+/* برای اینکه دکمه‌های داخل جدول هم به هم نریزند */
+#customerList table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 300px; /* حداقل عرض جدول تا دکمه‌ها خیلی فشرده نشوند */
+}
+
+/* استایل مخصوص دکمه‌های ویرایش و حذف */
+.action-btn {
+    padding: 5px 10px;
+    margin: 2px;
+    white-space: nowrap; /* از شکستنِ متن داخل دکمه جلوگیری می‌کند */
+}
+
+  /* ۱. تنظیمات کلی برای خوانایی در موبایل */
+body {
+    font-family: Tahoma, Arial, sans-serif;
+    margin: 0;
+    padding: 10px; /* فضای خالی اطراف */
+    font-size: 14px; /* سایز فونت مناسب برای گوشی */
+}
+
+/* ۲. کانتینر اصلی که همه چیز رو در بر می‌گیره */
+.container {
+    width: 100%;       /* عرضش همیشه کلِ صفحه باشد */
+    max-width: 100%;  /* فقط تا ۶۰۰ پیکسل بزرگ شود */
+    margin: 0 auto;    /* وسط‌چین باشد */
+    padding: 10px;     /* از طرفین فاصله داشته باشد */
+}
+
+/* ۳. این بخش جادوی اصلی برای جدول است */
+/* باید جدول رو داخل یک div بگذاریم تا فقط خودش اسکرول بخوره */
+.table-wrapper {
+    overflow-x: auto; /* اگر جدول بزرگ بود، فقط خودش افقی اسکرول بخوره */
+    -webkit-overflow-scrolling: touch; /* برای نرم‌تر شدن اسکرول در آیفون */
+}
+
+table {
+    width: 100%; /* جدول همیشه پر کنه عرض رو */
+    border-collapse: collapse;
+}
+
+/* ۴. بزرگتر کردن دکمه‌ها برای اینکه با انگشت راحت زده بشن */
+button, input {
+    padding: 10px;
+    font-size: 16px; /* فونت زیر ۱۶px در موبایل باعث زوم خودکار می‌شه */
+    margin: 5px 0;
+}
+
+body{font-family:tahoma;background:#f3f3f3;padding:20px}
+.box{max-width:900px;margin:auto;background:#fff;padding:20px;border-radius:10px}
+button{padding:10px 20px;margin:5px;cursor:pointer}
+input,select{padding:10px;font-size:16px;width:160px}
+.tab{display:none}.show{display:block}
+table{width:100%;border-collapse:collapse;margin-top:20px}
+th,td{border:1px solid #ccc;padding:8px;text-align:center}
+hr{margin:20px 0;border:0;border-top:1px solid #ccc}
+.backup-table-wrapper{
+max-height:360px;
+overflow-y:auto;
+overflow-x:hidden;
+margin-top:20px;
+border:1px solid #ccc;
+border-radius:6px
+}
+.backup-table-wrapper table{margin-top:0}
+.backup-table-wrapper thead th{
+position:sticky;
+top:0;
+background:#f7f7f7;
+z-index:1
+}
+.customer-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:6px 0;
+  width:100%;
+  box-sizing:border-box;
+}
+.customer-row span{
+  flex:1 1 auto;
+  min-width:0;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+  text-align:right;
+}
+.customer-row button{
+  flex:0 0 auto;
+  white-space:nowrap;
+  padding:8px 12px;
+  margin:0;
+}
+#customerList{
+  padding-right:0;
+  width:100%;
+  box-sizing:border-box;
+  overflow:hidden;
+}
+@media (max-width:480px){
+  .customer-row{gap:4px}
+  .customer-row button{
+    padding:7px 9px;
+    font-size:14px;
+  }
+}
+.range-result{margin-top:20px}
+</style>
+</head>
+<body>
+<div class="box">
+
+<button onclick="openTab('cut')">دفتر برش</button>
+<button onclick="openTab('stat')">آمار</button>
+<button onclick="openTab('manage')">مدیریت</button>
+<button onclick="openTab('all')">برش کل</button>
+
+<div id="cut" class="tab show">
+<h3>دفتر برش</h3>
+<input id="code" type="number" placeholder="کد طاقه">
+<input id="count" type="number" placeholder="تعداد برش">
+<br>
+<select id="customerSelect"></select>
+<br>
+<button id="saveBtn">ذخیره</button>
+
+<table>
+<thead><tr><th>کد طاقه</th><th>تعداد برش</th><th>مشتری</th><th>عملیات</th></tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+
+<div id="stat" class="tab">
+<h3>آمارگیری</h3>
+<input id="start" type="number" placeholder="کد شروع">
+<input id="range" type="number" placeholder="بازه شمارش">
+<input id="days" type="number" placeholder="روز کاری">
+<br>
+<button id="runBtn">شروع شمارش</button>
+<div id="result"></div>
+</div>
+
+<div id="manage" class="tab">
+<h3>مدیریت</h3>
+
+<h4>تعریف مشتری</h4>
+<input id="customerName" type="text" placeholder="نام مشتری">
+<button id="customerSaveBtn">افزودن مشتری</button>
+<div id="customerList"></div>
+
+<hr>
+
+<div style="margin-top:15px">
+<label>کد بعدی ثبت:</label>
+<input id="nextCodeInput" type="number">
+<button onclick="setNextCode()">اعمال کد</button>
+</div>
+
+<hr>
+
+<button onclick="exportBackup()">خروجی گرفتن</button>
+<br><br>
+<input id="importFile" type="file" accept=".json">
+<button onclick="importBackup()">بازیابی اطلاعات</button>
+
+</div>
+
+<div id="all" class="tab">
+<h3>برش کل</h3>
+
+<div>
+<input id="fromCode" type="number" placeholder="از کد">
+<input id="toCode" type="number" placeholder="تا کد">
+<button id="showRangeBtn">نمایش</button>
+</div>
+
+<div id="rangeInfo"></div>
+
+<div class="backup-table-wrapper">
+<table>
+<thead>
+<tr>
+<th>کد طاقه</th>
+<th>تعداد برش</th>
+<th>مشتری</th>
+</tr>
+</thead>
+<tbody id="allRecords"></tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+<script>
+let records=JSON.parse(localStorage.getItem("records")||"[]");
+let nextCode=localStorage.getItem("nextCode");
+let customers=JSON.parse(localStorage.getItem("customers")||"[]");
+
+const code=document.getElementById("code");
+const count=document.getElementById("count");
+const customerSelect=document.getElementById("customerSelect");
+let editingCode=null;
+let editingCustomerIndex=null;
+
+function init(){
+ if(nextCode){
+  code.value=nextCode;
+  code.readOnly=true;
+ }
+ render();
+ renderCustomerSelect();
+ renderCustomerList();
+ renderAllRecords();
+}
+
+function startEdit(targetCode){
+ let item=records.find(x=>x.code===targetCode);
+
+ if(!item){
+  alert("رکورد پیدا نشد.");
+  return;
+ }
+
+ editingCode=targetCode;
+ code.value=item.code;
+ count.value=item.count;
+ customerSelect.value=item.customer || "";
+
+ code.readOnly=false;
+ count.focus();
+}
+
+function saveEdit(){
+ let newCode=Number(code.value);
+ let newCount=Number(count.value);
+ let newCustomer=customerSelect.value;
+
+ if(editingCode===null){
+  return false;
+ }
+
+ if(!Number.isInteger(newCode)||newCode<1||newCode>999){
+  alert("کد طاقه باید بین 1 تا 999 باشد.");
+  return true;
+ }
+
+ if(!Number.isInteger(newCount)||newCount<0){
+  alert("تعداد برش نامعتبر است.");
+  return true;
+ }
+
+ if(!newCustomer){
+  alert("ابتدا مشتری را انتخاب کنید.");
+  return true;
+ }
+
+ if(newCode!==editingCode && records.some(x=>x.code===newCode)){
+  if(!confirm("این کد قبلاً ثبت شده است. جایگزین شود؟")) return true;
+  records=records.filter(x=>x.code!==newCode);
+ }
+
+ let item=records.find(x=>x.code===editingCode);
+ if(!item){
+  alert("رکورد پیدا نشد.");
+  editingCode=null;
+  return true;
+ }
+
+ item.code=newCode;
+ item.count=newCount;
+ item.customer=newCustomer;
+ records.sort((a,b)=>a.code-b.code);
+ localStorage.setItem("records",JSON.stringify(records));
+
+ editingCode=null;
+ code.readOnly=true;
+
+ code.value=nextCode || (newCode>=999?1:newCode+1);
+ count.value="";
+ render();
+ renderAllRecords();
+
+ return true;
+}
+
+function save(){
+ if(editingCode!==null){
+  saveEdit();
+  return;
+ }
+
+ let c=Number(code.value);
+ let n=Number(count.value);
+ let customer=customerSelect.value;
+
+ if(!Number.isInteger(c)||c<1||c>999){
+  alert("کد طاقه باید بین 1 تا 999 باشد.");
+  return;
+ }
+
+ if(!Number.isInteger(n)||n<0){
+  alert("تعداد برش نامعتبر است.");
+  return;
+ }
+
+ if(!customer){
+  alert("ابتدا مشتری را انتخاب کنید.");
+  return;
+ }
+
+ let old=records.find(x=>x.code===c);
+ if(old){
+  if(!confirm("این کد قبلا ثبت شده. جایگزین شود؟")) return;
+  records=records.filter(x=>x.code!==c);
+ }
+
+ records.push({code:c,count:n,customer:customer});
+ records.sort((a,b)=>a.code-b.code);
+
+ localStorage.setItem("records",JSON.stringify(records));
+
+ nextCode=c>=999?1:c+1;
+ localStorage.setItem("nextCode",nextCode);
+
+ code.value=nextCode;
+ count.value="";
+ code.readOnly=true;
+ count.focus();
+ render();
+ renderAllRecords();
+}
+
+function render(){
+ let data=records.slice(-10).reverse();
+ document.getElementById("rows").innerHTML=data.map(x=>
+ `<tr>
+   <td>${x.code}</td>
+   <td>${x.count}</td>
+   <td>${x.customer || "-"}</td>
+   <td><button type="button" onclick="startEdit(${x.code})">ویرایش</button></td>
+ </tr>`).join("");
+}
+
+function renderCustomerSelect(){
+ let select=document.getElementById("customerSelect");
+ let current=localStorage.getItem("lastCustomer") || select.value || "";
+
+ select.innerHTML=
+  `<option value="">انتخاب مشتری</option>`+
+  customers.map(c=>
+   `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`
+  ).join("");
+
+ if(customers.includes(current)){
+  select.value=current;
+ }else if(customers.length===1){
+  select.value=customers[0];
+ }
+}
+
+customerSelect.addEventListener("change",()=>{
+ if(customerSelect.value){
+  localStorage.setItem("lastCustomer",customerSelect.value);
+ }
+});
+
+code.addEventListener("keydown",e=>{
+ if(e.key==="Enter"){
+  e.preventDefault();
+  count.focus();
+ }
+});
+
+count.addEventListener("keydown",e=>{
+ if(e.key==="Enter"){
+  e.preventDefault();
+  save();
+ }
+});
+
+document.getElementById("saveBtn").onclick=save;
+
+function calculate(){
+ let start=Number(document.getElementById("start").value);
+ let limit=Number(document.getElementById("range").value);
+ let days=Number(document.getElementById("days").value);
+
+ if(!Number.isInteger(start)||start<1||start>999){
+  alert("کد شروع باید بین 1 تا 999 باشد.");
+  return;
+ }
+ if(!Number.isInteger(limit)||limit<1){
+  alert("بازه شمارش باید بیشتر از صفر باشد.");
+  return;
+ }
+ if(!Number.isInteger(days)||days<1){
+  alert("تعداد روز کاری باید بیشتر از صفر باشد.");
+  return;
+ }
+
+ let map={};
+ records.forEach(x=>map[x.code]=x.count);
+
+ let current=start;
+ let html=`<table>
+ <tr>
+ <th>روز کاری</th>
+ <th>کد شروع</th>
+ <th>کد پایان</th>
+ <th>تعداد شمارش</th>
+ <th>وضعیت</th>
+ </tr>`;
+
+ for(let d=1;d<=days;d++){
+  let sum=0;
+  let first=current;
+  let last=null;
+
+  while(sum<limit){
+   if(map[current]===undefined){
+    html+=`<tr><td>${d}</td><td>${first}</td><td>-</td><td>-</td><td>عدم برش</td></tr>`;
+    html+="</table>";
+    document.getElementById("result").innerHTML=html;
+    return;
+   }
+
+   sum+=map[current];
+   last=current;
+   current=current>=999?1:current+1;
+  }
+
+  html+=`<tr>
+  <td>${d}</td>
+  <td>${first}</td>
+  <td>${last}</td>
+  <td>${sum}</td>
+  <td>کامل</td>
+  </tr>`;
+ }
+
+ html+="</table>";
+ document.getElementById("result").innerHTML=html;
+}
+
+document.getElementById("runBtn").onclick=calculate;
+
+function renderAllRecords(from,to){
+ let list=document.getElementById("allRecords");
+ let info=document.getElementById("rangeInfo");
+ if(!list || !info) return;
+
+ let filterActive=false;
+
+ if(from!==undefined && to!==undefined && Number.isInteger(from)&&Number.isInteger(to)&&from>=1&&to<=999&&from<=to){
+  filterActive=true;
+  let filtered=records.filter(x=>x.code>=from && x.code<=to);
+  let taagheSum=filtered.reduce((sum,x)=>sum+(Number(x.count)||0),0);
+  info.innerHTML=`تعداد طاقه‌های این بازه (شامل کد ${from} و کد ${to}): ${filtered.length}<br>مجموع برش‌ها: ${taagheSum}
+   <br><button type="button" id="showAllBtn" class="btn" onclick="renderAllRecords()">نمایش همه</button>`;
+
+  let data=filtered.slice().sort((a,b)=>b.code-a.code);
+  list.innerHTML=data.map(x=>
+   `<tr><td>${x.code}</td><td>${x.count}</td><td>${x.customer || "-"}</td></tr>`
+  ).join("");
+ }else{
+  let total=records.length;
+  let totalTaaghe=records.reduce((sum,x)=>sum+(Number(x.count)||0),0);
+  let last=records.length ? records.slice().sort((a,b)=>b.code-a)[0].code : 0;
+  info.innerHTML=`تعداد کل طاقه‌های ثبت شده: ${total}<br>مجموع کل برش‌ها: ${totalTaaghe}<br>آخرین کد ثبت شده: ${last}`;
+
+  let data=records.slice().sort((a,b)=>b.code-a.code);
+  list.innerHTML=data.map(x=>
+   `<tr><td>${x.code}</td><td>${x.count}</td><td>${x.customer || "-"}</td></tr>`
+  ).join("");
+ }
+}
+
+document.getElementById("showRangeBtn").onclick=function(){
+ let from=Number(document.getElementById("fromCode").value);
+ let to=Number(document.getElementById("toCode").value);
+
+ if(!Number.isInteger(from)||from<1||from>999||!Number.isInteger(to)||to<1||to>999){
+  alert("کدها باید بین 1 تا 999 باشند.");
+  return;
+ }
+
+ if(from>to){
+  alert("کد شروع نباید از کد پایان بزرگ‌تر باشد.");
+  return;
+ }
+
+ renderAllRecords(from,to);
+};
+
+function setNextCode(){
+ let value=Number(document.getElementById("nextCodeInput").value);
+
+ if(!Number.isInteger(value) || value<1 || value>999){
+  alert("کد باید بین 1 تا 999 باشد.");
+  return;
+ }
+
+ nextCode=value;
+ localStorage.setItem("nextCode",nextCode);
+
+ code.value=nextCode;
+ code.readOnly=true;
+ document.getElementById("nextCodeInput").value=nextCode;
+
+ alert("کد بعدی تغییر کرد.");
+}
+
+function exportBackup(){
+ let backup={
+  nextCode: nextCode,
+  records: records,
+  customers: customers,
+  lastCustomer: localStorage.getItem("lastCustomer") || ""
+ };
+
+ let blob=new Blob(
+  [JSON.stringify(backup,null,2)],
+  {type:"application/json"}
+ );
+
+ let a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="factory_backup.json";
+ a.click();
+
+ URL.revokeObjectURL(a.href);
+}
+
+function importBackup(){
+ let file=document.getElementById("importFile").files[0];
+
+ if(!file){
+  alert("ابتدا فایل پشتیبان را انتخاب کنید.");
+  return;
+ }
+
+ let reader=new FileReader();
+
+ reader.onload=function(e){
+  try{
+   let backup=JSON.parse(e.target.result);
+
+   if(!backup.records){
+    alert("فایل معتبر نیست.");
+    return;
+   }
+
+   records=backup.records;
+   nextCode=backup.nextCode;
+   customers=Array.isArray(backup.customers)?backup.customers:customers;
+
+   localStorage.setItem("records",JSON.stringify(records));
+   localStorage.setItem("nextCode",nextCode);
+   localStorage.setItem("customers",JSON.stringify(customers));
+
+   if(backup.lastCustomer){
+    localStorage.setItem("lastCustomer",backup.lastCustomer);
+   }
+
+   code.value=nextCode;
+   code.readOnly=true;
+
+   render();
+   renderCustomerSelect();
+   renderCustomerList();
+   renderAllRecords();
+
+   alert("بازیابی انجام شد.");
+
+  }catch{
+   alert("خطا در خواندن فایل.");
+  }
+ };
+
+ reader.readAsText(file);
+}
+
+function resetDatabase(){
+ if(!confirm("همه اطلاعات پاک شود؟ این کار قابل برگشت نیست.")){
+  return;
+ }
+
+ records=[];
+ nextCode=1;
+ customers=[];
+
+ localStorage.removeItem("records");
+ localStorage.removeItem("nextCode");
+ localStorage.removeItem("customers");
+ localStorage.removeItem("lastCustomer");
+
+ code.value=1;
+ code.readOnly=true;
+ count.value="";
+
+ render();
+ renderCustomerSelect();
+ renderCustomerList();
+ renderAllRecords();
+
+ alert("اطلاعات با موفقیت پاک شد.");
+}
+
+function openTab(id){
+ document.querySelectorAll(".tab").forEach(x=>x.classList.remove("show"));
+ document.getElementById(id).classList.add("show");
+
+ if(id==="all"){
+  renderAllRecords();
+ }
+ if(id==="manage"){
+  renderCustomerList();
+  renderCustomerSelect();
+ }
+}
+
+function addCustomer(){
+ let input=document.getElementById("customerName");
+ let name=input.value.trim();
+
+ if(!name){
+  alert("نام مشتری را وارد کنید.");
+  return;
+ }
+
+ if(customers.includes(name)){
+  alert("این مشتری قبلاً تعریف شده است.");
+  return;
+ }
+
+ customers.push(name);
+ localStorage.setItem("customers",JSON.stringify(customers));
+
+ input.value="";
+ renderCustomerSelect();
+ renderCustomerList();
+
+ if(!localStorage.getItem("lastCustomer")){
+  customerSelect.value=name;
+  localStorage.setItem("lastCustomer",name);
+ }
+}
+
+function renderCustomerList(){
+ let list=document.getElementById("customerList");
+
+ list.innerHTML=customers.map((c,i)=>
+  `<div class="customer-row">
+    <span>${escapeHtml(c)}</span>
+    <button type="button" onclick="editCustomer(${i})">ویرایش</button>
+    <button type="button" onclick="deleteCustomer(${i})">حذف</button>
+  </div>`
+ ).join("");
+}
+
+function editCustomer(index){
+ let oldName=customers[index];
+ let newName=prompt("نام جدید مشتری:",oldName);
+
+ if(newName===null) return;
+
+ newName=newName.trim();
+
+ if(!newName){
+  alert("نام مشتری نمی‌تواند خالی باشد.");
+  return;
+ }
+
+ if(newName!==oldName && customers.includes(newName)){
+  alert("این نام مشتری قبلاً وجود دارد.");
+  return;
+ }
+
+ customers[index]=newName;
+
+ records.forEach(r=>{
+  if(r.customer===oldName) r.customer=newName;
+ });
+
+ if(localStorage.getItem("lastCustomer")===oldName){
+  localStorage.setItem("lastCustomer",newName);
+ }
+
+ localStorage.setItem("customers",JSON.stringify(customers));
+ localStorage.setItem("records",JSON.stringify(records));
+
+ renderCustomerSelect();
+ renderCustomerList();
+ render();
+ renderAllRecords();
+}
+
+function deleteCustomer(index){
+ let name=customers[index];
+
+ if(records.some(r=>r.customer===name)){
+  alert("این مشتری در رکوردهای ثبت‌شده استفاده شده و حذف نمی‌شود.");
+  return;
+ }
+
+ if(!confirm(`مشتری «${name}» حذف شود؟`)) return;
+
+ customers.splice(index,1);
+ localStorage.setItem("customers",JSON.stringify(customers));
+
+ if(localStorage.getItem("lastCustomer")===name){
+  localStorage.removeItem("lastCustomer");
+ }
+
+ renderCustomerSelect();
+ renderCustomerList();
+}
+
+document.getElementById("customerSaveBtn").onclick=addCustomer;
+
+function escapeHtml(value){
+ return String(value)
+  .replace(/&/g,"&amp;")
+  .replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;")
+  .replace(/'/g,"&#039;");
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مدیریت تولید</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  font-family:Tahoma,Arial,sans-serif;
+  margin:0;
+  padding:0;
+  background:#dceeff;
+  color:#222;
+}
+.box{
+  width:100%;
+  max-width:1100px;
+  margin:0 auto;
+  padding:12px;
+}
+.main-menu{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  background:#b9dcf7;
+  padding:8px;
+  border-radius:10px;
+  margin-bottom:12px;
+}
+.main-menu button{
+  flex:1 1 auto;
+  min-width:90px;
+  margin:0;
+  border:1px solid #8bb8dc;
+  border-radius:7px;
+  background:#fff;
+  color:#174a70;
+  font-weight:bold;
+}
+.main-menu button.active{
+  background:#4f9bd1;
+  color:#fff;
+}
+button,input,select{
+  padding:10px;
+  font-size:16px;
+  font-family:inherit;
+}
+button{cursor:pointer;border:1px solid #aaa;border-radius:6px;background:#fff}
+input,select{width:180px;border:1px solid #aaa;border-radius:6px;background:#fff}
+.tab{display:none}
+.show{display:block}
+h3{margin-top:5px}
+.panel{
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+}
+th,td{
+  border:1px solid #bbb;
+  padding:8px;
+  text-align:center;
+  white-space:nowrap;
+}
+th{background:#eaf3fa}
+.table-wrapper{
+  width:100%;
+  overflow:auto;
+  max-height:480px;
+  border:1px solid #bbb;
+  border-radius:7px;
+}
+.table-wrapper table{margin-top:0;min-width:650px}
+.backup-table-wrapper{
+  max-height:360px;
+  overflow:auto;
+  margin-top:20px;
+  border:1px solid #ccc;
+  border-radius:6px;
+}
+.backup-table-wrapper table{margin-top:0}
+.backup-table-wrapper thead th{
+  position:sticky;
+  top:0;
+  background:#f7f7f7;
+  z-index:1;
+}
+.customer-row,.part-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:6px 0;
+  width:100%;
+}
+.customer-row span,.part-row span{
+  flex:1;
+  min-width:0;
+  overflow-wrap:anywhere;
+  text-align:right;
+}
+.customer-row button,.part-row button{margin:0;padding:8px 12px}
+.stat-settings{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px 10px;
+  margin-bottom:10px;
+  align-items:center;
+}
+.stat-settings label{font-weight:bold}
+.stat-settings input,.stat-settings select{margin:0;padding:7px 8px}
+.stat-settings button{grid-column:1/-1;margin:2px 0 0;padding:7px 12px}
+.stat-title{
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+  margin:8px 0 5px;
+}
+.stat-total{
+  text-align:center;
+  font-weight:bold;
+  line-height:1.9;
+  margin-bottom:10px;
+}
+.stat-table-wrapper{
+  width:100%;
+  overflow:auto;
+  max-height:520px;
+  border:1px solid #aaa;
+  border-radius:7px;
+}
+.stat-table{
+  margin-top:0;
+  min-width:560px;
+  font-size:13px;
+}
+.stat-table th,.stat-table td{padding:5px 6px}
+.stat-table th{position:sticky;top:0;z-index:2}
+.day-even td{background:#fff}
+.day-odd td{background:#fff4a8}
+.stat-actions{
+  margin-top:12px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+hr{margin:20px 0;border:0;border-top:1px solid #ccc}
+
+@media(max-width:600px){
+  body{font-size:14px}
+  .box{padding:8px}
+  .main-menu button{min-width:70px;padding:9px 6px}
+  input,select{width:100%}
+  .stat-settings>*{flex:1 1 100%}
+  .customer-row button,.part-row button{flex:0 0 auto}
+}
+
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  body{background:#fff}
+  .box{max-width:none;padding:0}
+  .main-menu,.stat-settings,.stat-actions,.no-print{display:none!important}
+  .tab{display:none!important}
+  #stat{display:block!important}
+  .panel{box-shadow:none;padding:0}
+  .stat-table-wrapper{
+    max-height:none;
+    overflow:visible;
+    border:0;
+  }
+  .stat-table{min-width:0;width:100%}
+  .stat-table th{position:static}
+  .stat-title{margin-top:0}
+  .day-even td{background:#fff!important}
+  .day-odd td{background:#fff4a8!important}
+}
+</style>
+
+</head>
+<body>
+<div class="box">
+
+  <div class="main-menu no-print">
+    <button onclick="openTab('cut',this)">دفتر برش</button>
+    <button onclick="openTab('stat',this)">آمار</button>
+    <button onclick="openTab('customers',this)">مشتری‌ها</button>
+    <button onclick="openTab('parts',this)">قسمت‌ها</button>
+    <button onclick="openTab('all',this)">برش کل</button>
+  </div>
+
+  <div id="cut" class="tab show">
+    <div class="panel">
+      <h3>دفتر برش</h3>
+      <input id="code" type="number" placeholder="کد طاقه">
+      <input id="count" type="number" placeholder="تعداد برش">
+      <br>
+      <select id="customerSelect"></select>
+      <br>
+      <button id="saveBtn">ذخیره</button>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>کد طاقه</th><th>تعداد برش</th><th>مشتری</th><th>عملیات</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="stat" class="tab">
+    <div class="panel">
+      <h3 class="no-print">آمار</h3>
+
+      <div class="stat-settings no-print">
+        <label>قسمت:</label>
+        <select id="statPartSelect"></select>
+        <label>تعداد روز کاری:</label>
+        <input id="workDays" type="number" min="1" placeholder="تعداد روز">
+        <label>کد شروع شمارش:</label>
+        <input id="statStartCode" type="number" min="1" max="999" placeholder="مثلاً 1">
+        <label>تعداد شمارش روزانه:</label>
+        <input id="statDailyTarget" type="number" min="1" placeholder="مثلاً 100">
+        <button id="buildStatBtn">نمایش آمار</button>
+      </div>
+
+      <div id="statReport"></div>
+
+      <div class="stat-actions no-print">
+        <button id="printPdfBtn">ذخیره / چاپ PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="customers" class="tab">
+    <div class="panel">
+      <h3>مشتری‌ها</h3>
+      <input id="customerName" type="text" placeholder="نام مشتری">
+      <button id="customerSaveBtn">افزودن مشتری</button>
+      <div id="customerList"></div>
+
+      <hr>
+      <div class="no-print">
+        <label>کد بعدی ثبت:</label>
+        <input id="nextCodeInput" type="number">
+        <button onclick="setNextCode()">اعمال کد</button>
+      </div>
+
+      <hr>
+      <button onclick="exportBackup()">خروجی گرفتن</button>
+      <br><br>
+      <input id="importFile" type="file" accept=".json">
+      <button onclick="importBackup()">بازیابی اطلاعات</button>
+    </div>
+  </div>
+
+  <div id="parts" class="tab">
+    <div class="panel">
+      <h3>قسمت‌ها</h3>
+      <input id="partName" type="text" placeholder="نام قسمت">
+      <input id="partPrice" type="number" min="0" placeholder="قیمت هر قسمت">
+      <button id="partSaveBtn">افزودن قسمت</button>
+      <div id="partList"></div>
+    </div>
+  </div>
+
+  <div id="all" class="tab">
+    <div class="panel">
+      <h3>برش کل</h3>
+      <div class="no-print">
+        <input id="fromCode" type="number" placeholder="از کد">
+        <input id="toCode" type="number" placeholder="تا کد">
+        <button id="showRangeBtn">نمایش</button>
+      </div>
+      <div id="rangeInfo"></div>
+      <div class="backup-table-wrapper">
+        <table>
+          <thead>
+            <tr><th>کد طاقه</th><th>تعداد برش</th><th>مشتری</th></tr>
+          </thead>
+          <tbody id="allRecords"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let records=JSON.parse(localStorage.getItem("records")||"[]");
+let nextCode=localStorage.getItem("nextCode");
+let customers=JSON.parse(localStorage.getItem("customers")||"[]");
+let parts=JSON.parse(localStorage.getItem("parts")||"[]");
+
+const code=document.getElementById("code");
+const count=document.getElementById("count");
+const customerSelect=document.getElementById("customerSelect");
+let editingCode=null;
+let editingCustomerIndex=null;
+let editingPartIndex=null;
+
+function init(){
+  if(!nextCode) nextCode=1;
+  code.value=nextCode;
+  code.readOnly=true;
+  document.getElementById("nextCodeInput").value=nextCode;
+  render();
+  renderCustomerSelect();
+  renderCustomerList();
+  renderPartList();
+  renderStatPartSelect();
+  renderAllRecords();
+}
+
+function startEdit(targetCode){
+  let item=records.find(x=>x.code===targetCode);
+  if(!item){alert("رکورد پیدا نشد.");return;}
+  editingCode=targetCode;
+  code.value=item.code;
+  count.value=item.count;
+  customerSelect.value=item.customer||"";
+  code.readOnly=false;
+  count.focus();
+}
+
+function saveEdit(){
+  let newCode=Number(code.value);
+  let newCount=Number(count.value);
+  let newCustomer=customerSelect.value;
+  if(editingCode===null)return false;
+
+  if(!Number.isInteger(newCode)||newCode<1||newCode>999){
+    alert("کد طاقه باید بین 1 تا 999 باشد.");return true;
+  }
+  if(!Number.isInteger(newCount)||newCount<0){
+    alert("تعداد برش نامعتبر است.");return true;
+  }
+  if(!newCustomer){
+    alert("ابتدا مشتری را انتخاب کنید.");return true;
+  }
+  if(newCode!==editingCode&&records.some(x=>x.code===newCode)){
+    if(!confirm("این کد قبلاً ثبت شده است. جایگزین شود؟"))return true;
+    records=records.filter(x=>x.code!==newCode);
+  }
+
+  let item=records.find(x=>x.code===editingCode);
+  if(!item){alert("رکورد پیدا نشد.");editingCode=null;return true;}
+  item.code=newCode;item.count=newCount;item.customer=newCustomer;
+  records.sort((a,b)=>a.code-b.code);
+  localStorage.setItem("records",JSON.stringify(records));
+  editingCode=null;code.readOnly=true;
+  code.value=nextCode||(newCode>=999?1:newCode+1);
+  count.value="";
+  render();renderAllRecords();
+  return true;
+}
+
+function save(){
+  if(editingCode!==null){saveEdit();return;}
+  let c=Number(code.value),n=Number(count.value),customer=customerSelect.value;
+
+  if(!Number.isInteger(c)||c<1||c>999){alert("کد طاقه باید بین 1 تا 999 باشد.");return;}
+  if(!Number.isInteger(n)||n<0){alert("تعداد برش نامعتبر است.");return;}
+  if(!customer){alert("ابتدا مشتری را انتخاب کنید.");return;}
+
+  let old=records.find(x=>x.code===c);
+  if(old){
+    if(!confirm("این کد قبلا ثبت شده. جایگزین شود؟"))return;
+    records=records.filter(x=>x.code!==c);
+  }
+  records.push({code:c,count:n,customer:customer});
+  records.sort((a,b)=>a.code-b.code);
+  localStorage.setItem("records",JSON.stringify(records));
+
+  nextCode=c>=999?1:c+1;
+  localStorage.setItem("nextCode",nextCode);
+  code.value=nextCode;count.value="";code.readOnly=true;count.focus();
+  render();renderAllRecords();
+}
+
+function render(){
+  let data=records.slice(-10).reverse();
+  document.getElementById("rows").innerHTML=data.map(x=>
+    `<tr><td>${x.code}</td><td>${x.count}</td><td>${escapeHtml(x.customer||"-")}</td>
+    <td><button type="button" onclick="startEdit(${x.code})">ویرایش</button></td></tr>`
+  ).join("");
+}
+
+function renderCustomerSelect(){
+  let select=document.getElementById("customerSelect");
+  let current=localStorage.getItem("lastCustomer")||select.value||"";
+  select.innerHTML=`<option value="">انتخاب مشتری</option>`+
+    customers.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  if(customers.includes(current))select.value=current;
+  else if(customers.length===1)select.value=customers[0];
+}
+
+customerSelect.addEventListener("change",()=>{
+  if(customerSelect.value)localStorage.setItem("lastCustomer",customerSelect.value);
+});
+
+code.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){e.preventDefault();count.focus();}
+});
+count.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){e.preventDefault();save();}
+});
+document.getElementById("saveBtn").onclick=save;
+
+function addCustomer(){
+  let input=document.getElementById("customerName"),name=input.value.trim();
+  if(!name){alert("نام مشتری را وارد کنید.");return;}
+  if(customers.includes(name)){alert("این مشتری قبلاً تعریف شده است.");return;}
+  customers.push(name);
+  localStorage.setItem("customers",JSON.stringify(customers));
+  input.value="";
+  renderCustomerSelect();renderCustomerList();
+  if(!localStorage.getItem("lastCustomer")){
+    customerSelect.value=name;
+    localStorage.setItem("lastCustomer",name);
+  }
+}
+
+function renderCustomerList(){
+  let list=document.getElementById("customerList");
+  list.innerHTML=customers.map((c,i)=>
+    `<div class="customer-row"><span>${escapeHtml(c)}</span>
+    <button type="button" onclick="editCustomer(${i})">ویرایش</button>
+    <button type="button" onclick="deleteCustomer(${i})">حذف</button></div>`
+  ).join("");
+}
+
+function editCustomer(index){
+  let oldName=customers[index],newName=prompt("نام جدید مشتری:",oldName);
+  if(newName===null)return;
+  newName=newName.trim();
+  if(!newName){alert("نام مشتری نمی‌تواند خالی باشد.");return;}
+  if(newName!==oldName&&customers.includes(newName)){alert("این نام مشتری قبلاً وجود دارد.");return;}
+  customers[index]=newName;
+  records.forEach(r=>{if(r.customer===oldName)r.customer=newName;});
+  if(localStorage.getItem("lastCustomer")===oldName)localStorage.setItem("lastCustomer",newName);
+  localStorage.setItem("customers",JSON.stringify(customers));
+  localStorage.setItem("records",JSON.stringify(records));
+  renderCustomerSelect();renderCustomerList();render();renderAllRecords();
+}
+
+function deleteCustomer(index){
+  let name=customers[index];
+  if(records.some(r=>r.customer===name)){
+    alert("این مشتری در رکوردهای ثبت‌شده استفاده شده و حذف نمی‌شود.");return;
+  }
+  if(!confirm(`مشتری «${name}» حذف شود؟`))return;
+  customers.splice(index,1);
+  localStorage.setItem("customers",JSON.stringify(customers));
+  if(localStorage.getItem("lastCustomer")===name)localStorage.removeItem("lastCustomer");
+  renderCustomerSelect();renderCustomerList();
+}
+document.getElementById("customerSaveBtn").onclick=addCustomer;
+
+function addPart(){
+  let name=document.getElementById("partName").value.trim();
+  let price=Number(document.getElementById("partPrice").value);
+  if(!name){alert("نام قسمت را وارد کنید.");return;}
+  if(!Number.isFinite(price)||price<0){alert("قیمت قسمت نامعتبر است.");return;}
+  if(parts.some(p=>p.name===name)){alert("این قسمت قبلاً تعریف شده است.");return;}
+  parts.push({name:name,price:price});
+  localStorage.setItem("parts",JSON.stringify(parts));
+  document.getElementById("partName").value="";
+  document.getElementById("partPrice").value="";
+  renderPartList();renderStatPartSelect();
+}
+
+function renderPartList(){
+  let list=document.getElementById("partList");
+  list.innerHTML=parts.map((p,i)=>
+    `<div class="part-row"><span>${escapeHtml(p.name)} — ${formatNumber(p.price)}</span>
+    <button type="button" onclick="editPart(${i})">ویرایش</button>
+    <button type="button" onclick="deletePart(${i})">حذف</button></div>`
+  ).join("");
+}
+
+function editPart(index){
+  let p=parts[index];
+  let newName=prompt("نام قسمت:",p.name);
+  if(newName===null)return;
+  newName=newName.trim();
+  if(!newName){alert("نام قسمت نمی‌تواند خالی باشد.");return;}
+  let newPrice=prompt("قیمت هر قسمت:",p.price);
+  if(newPrice===null)return;
+  newPrice=Number(newPrice);
+  if(!Number.isFinite(newPrice)||newPrice<0){alert("قیمت نامعتبر است.");return;}
+  if(newName!==p.name&&parts.some(x=>x.name===newName)){alert("این نام قسمت قبلاً وجود دارد.");return;}
+  p.name=newName;p.price=newPrice;
+  localStorage.setItem("parts",JSON.stringify(parts));
+  renderPartList();renderStatPartSelect();
+}
+
+function deletePart(index){
+  let name=parts[index].name;
+  if(!confirm(`قسمت «${name}» حذف شود؟`))return;
+  parts.splice(index,1);
+  localStorage.setItem("parts",JSON.stringify(parts));
+  renderPartList();renderStatPartSelect();
+}
+document.getElementById("partSaveBtn").onclick=addPart;
+
+function renderStatPartSelect(){
+  let select=document.getElementById("statPartSelect");
+  let current=select.value;
+  select.innerHTML=`<option value="">انتخاب قسمت</option>`+
+    parts.map((p,i)=>`<option value="${i}">${escapeHtml(p.name)}</option>`).join("");
+  if(current!==""&&parts[current])select.value=current;
+}
+
+function calculatePartDays(part,startCode,days,dailyTarget){
+  let map={};
+  records.forEach(x=>{map[x.code]=Number(x.count)||0;});
+  let result=[],current=startCode;
+
+  for(let d=1;d<=days;d++){
+    let sum=0,first=current,last=null,guard=0;
+    while(sum<dailyTarget&&guard<999){
+      if(map[current]===undefined)break;
+      sum+=map[current];
+      last=current;
+      current=current>=999?1:current+1;
+      guard++;
+    }
+    result.push({
+      day:d,start:first,end:last,count:sum,
+      complete:sum>=dailyTarget
+    });
+    if(last===null||sum<dailyTarget)break;
+  }
+  return result;
+}
+
+function buildStat(){
+  let partIndex=Number(document.getElementById("statPartSelect").value);
+  let days=Number(document.getElementById("workDays").value);
+  if(!Number.isInteger(partIndex)||!parts[partIndex]){
+    alert("ابتدا قسمت را انتخاب کنید.");return;
+  }
+  if(!Number.isInteger(days)||days<1){
+    alert("تعداد روزهای کاری باید بیشتر از صفر باشد.");return;
+  }
+
+  let start=Number(document.getElementById("statStartCode").value);
+  if(!Number.isInteger(start)||start<1||start>999){
+    alert("کد شروع باید بین 1 تا 999 باشد.");return;
+  }
+
+  let target=Number(document.getElementById("statDailyTarget").value);
+  if(!Number.isInteger(target)||target<1){
+    alert("تعداد شمارش روزانه باید بیشتر از صفر باشد.");return;
+  }
+
+  let data=calculatePartDays(parts[partIndex],start,days,target);
+  let totalCount=data.reduce((s,x)=>s+x.count,0);
+  let totalPrice=totalCount*parts[partIndex].price;
+
+  let rows=data.map((x,i)=>
+    `<tr class="${i%2===0?'day-even':'day-odd'}">
+      <td>روز ${x.day}</td>
+      <td>${x.start}</td>
+      <td>${x.end===null?"-":x.end}</td>
+      <td>${formatNumber(x.count)}</td>
+      <td>${formatNumber(x.count*parts[partIndex].price)}</td>
+    </tr>`
+  ).join("");
+
+  document.getElementById("statReport").innerHTML=
+    `<div class="stat-title">آمار قسمت: ${escapeHtml(parts[partIndex].name)}</div>
+     <div class="stat-total">
+       جمع کل شمارش: ${formatNumber(totalCount)}<br>
+       جمع کل مبلغ: ${formatNumber(totalPrice)}
+     </div>
+     <div class="stat-table-wrapper">
+       <table class="stat-table">
+         <thead><tr><th>روز کاری</th><th>کد شروع</th><th>کد پایان</th><th>تعداد شمارش</th><th>قیمت روز</th></tr></thead>
+         <tbody>${rows}</tbody>
+       </table>
+     </div>
+     ${data.some(x=>!x.complete)?'<div class="no-print" style="margin-top:8px">هشدار: برای یکی از روزها رکورد کافی برای رسیدن به تعداد هدف وجود نداشت.</div>':''}`;
+}
+
+document.getElementById("buildStatBtn").onclick=buildStat;
+document.getElementById("printPdfBtn").onclick=()=>window.print();
+
+function renderAllRecords(from,to){
+  let list=document.getElementById("allRecords"),info=document.getElementById("rangeInfo");
+  if(!list||!info)return;
+
+  if(from!==undefined&&to!==undefined&&Number.isInteger(from)&&Number.isInteger(to)&&from>=1&&to<=999&&from<=to){
+    let filtered=records.filter(x=>x.code>=from&&x.code<=to);
+    let sum=filtered.reduce((s,x)=>s+(Number(x.count)||0),0);
+    info.innerHTML=`تعداد طاقه‌های این بازه (شامل کد ${from} و کد ${to}): ${filtered.length}<br>
+      مجموع برش‌ها: ${formatNumber(sum)}
+      <br><button type="button" onclick="renderAllRecords()">نمایش همه</button>`;
+    list.innerHTML=filtered.slice().sort((a,b)=>b.code-a.code).map(x=>
+      `<tr><td>${x.code}</td><td>${x.count}</td><td>${escapeHtml(x.customer||"-")}</td></tr>`).join("");
+  }else{
+    let total=records.length,totalCount=records.reduce((s,x)=>s+(Number(x.count)||0),0);
+    let last=records.length?records.slice().sort((a,b)=>b.code-a.code)[0].code:0;
+    info.innerHTML=`تعداد کل طاقه‌های ثبت شده: ${total}<br>مجموع کل برش‌ها: ${formatNumber(totalCount)}<br>آخرین کد ثبت شده: ${last}`;
+    list.innerHTML=records.slice().sort((a,b)=>b.code-a.code).map(x=>
+      `<tr><td>${x.code}</td><td>${x.count}</td><td>${escapeHtml(x.customer||"-")}</td></tr>`).join("");
+  }
+}
+
+document.getElementById("showRangeBtn").onclick=function(){
+  let from=Number(document.getElementById("fromCode").value);
+  let to=Number(document.getElementById("toCode").value);
+  if(!Number.isInteger(from)||from<1||from>999||!Number.isInteger(to)||to<1||to>999){
+    alert("کدها باید بین 1 تا 999 باشند.");return;
+  }
+  if(from>to){alert("کد شروع نباید از کد پایان بزرگ‌تر باشد.");return;}
+  renderAllRecords(from,to);
+};
+
+function setNextCode(){
+  let value=Number(document.getElementById("nextCodeInput").value);
+  if(!Number.isInteger(value)||value<1||value>999){alert("کد باید بین 1 تا 999 باشد.");return;}
+  nextCode=value;
+  localStorage.setItem("nextCode",nextCode);
+  code.value=nextCode;code.readOnly=true;
+  document.getElementById("nextCodeInput").value=nextCode;
+  alert("کد بعدی تغییر کرد.");
+}
+
+function exportBackup(){
+  let backup={
+    nextCode:nextCode,records:records,customers:customers,
+    parts:parts,lastCustomer:localStorage.getItem("lastCustomer")||""
+  };
+  let blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="factory_backup.json";a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importBackup(){
+  let file=document.getElementById("importFile").files[0];
+  if(!file){alert("ابتدا فایل پشتیبان را انتخاب کنید.");return;}
+  let reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      let backup=JSON.parse(e.target.result);
+      if(!backup.records){alert("فایل معتبر نیست.");return;}
+      records=backup.records;
+      nextCode=backup.nextCode||1;
+      customers=Array.isArray(backup.customers)?backup.customers:customers;
+      parts=Array.isArray(backup.parts)?backup.parts:parts;
+      localStorage.setItem("records",JSON.stringify(records));
+      localStorage.setItem("nextCode",nextCode);
+      localStorage.setItem("customers",JSON.stringify(customers));
+      localStorage.setItem("parts",JSON.stringify(parts));
+      if(backup.lastCustomer)localStorage.setItem("lastCustomer",backup.lastCustomer);
+      code.value=nextCode;code.readOnly=true;
+      render();renderCustomerSelect();renderCustomerList();renderPartList();renderStatPartSelect();renderAllRecords();
+      alert("بازیابی انجام شد.");
+    }catch{alert("خطا در خواندن فایل.");}
+  };
+  reader.readAsText(file);
+}
+
+function resetDatabase(){
+  if(!confirm("همه اطلاعات پاک شود؟ این کار قابل برگشت نیست."))return;
+  records=[];nextCode=1;customers=[];parts=[];
+  localStorage.removeItem("records");localStorage.removeItem("nextCode");
+  localStorage.removeItem("customers");localStorage.removeItem("parts");localStorage.removeItem("lastCustomer");
+  code.value=1;code.readOnly=true;count.value="";
+  render();renderCustomerSelect();renderCustomerList();renderPartList();renderStatPartSelect();renderAllRecords();
+  alert("اطلاعات با موفقیت پاک شد.");
+}
+
+function openTab(id,button){
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("show"));
+  document.getElementById(id).classList.add("show");
+  document.querySelectorAll(".main-menu button").forEach(x=>x.classList.remove("active"));
+  if(button)button.classList.add("active");
+  if(id==="all")renderAllRecords();
+  if(id==="customers"){renderCustomerList();renderCustomerSelect();}
+  if(id==="parts"){renderPartList();renderStatPartSelect();}
+}
+
+function formatNumber(value){
+  return Number(value||0).toLocaleString("fa-IR");
+}
+
+function escapeHtml(value){
+  return String(value)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+init();
+document.querySelector(".main-menu button").classList.add("active");
+</script>
+
+</body>
+</html>
