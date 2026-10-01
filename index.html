@@ -1,0 +1,2684 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم مدیریت حقوق تولید</title>
+
+    <style>
+        .report-scroll {
+             max-height: 350px;
+             overflow-y: auto;
+             overflow-x: auto;
+             border: 1px solid #dfe6e9;
+             border-radius: 6px;
+        }
+
+        .report-filters {
+             background: #f8f9fa;
+             border: 1px solid #dfe6e9;
+             border-radius: 8px;
+             padding: 12px;
+             margin-bottom: 15px;
+        }
+
+        .report-filters h3 {
+             margin-top: 0;
+             text-align: center;
+             color: var(--primary-color);
+        }
+
+
+        .report-filter-row {
+             display: flex;
+             flex-wrap: wrap;
+             gap: 8px;
+             align-items: center;
+             margin-bottom: 8px;
+        }
+
+        .report-filter-row-date {
+             flex-wrap: nowrap;
+        }
+
+        .report-filter-row-code {
+             flex-wrap: nowrap;
+        }
+
+        .report-filter-row-date input,
+        .report-filter-row-date select {
+             flex: 1 1 150px;
+             min-width: 120px;
+             max-width: 220px;
+        }
+
+        .report-filter-row-date .btn {
+             flex: 0 0 auto;
+        }
+
+        .report-filter-row-code input {
+             flex: 1 1 150px;
+             min-width: 120px;
+             max-width: 220px;
+        }
+
+        .report-filters .action-bar {
+             margin-bottom: 8px;
+        }
+
+        .report-filters input,
+        .report-filters select {
+             flex: 1 1 140px;
+             min-width: 120px;
+             max-width: 220px;
+        }
+
+        .code-entry {
+             width: 100%;
+             max-width: 100%;
+             box-sizing: border-box;
+             overflow: hidden;
+             padding: 4px;
+             border-radius: 6px;
+        }
+
+        .code-entry input,
+        .code-entry .btn {
+             box-sizing: border-box;
+        }
+
+        .code-entry input {
+             max-width: 90px;
+        }
+
+        @media (max-width: 600px) {
+             .report-filter-row {
+                 align-items: stretch;
+             }
+
+             .report-filter-row-date {
+                 flex-wrap: wrap;
+             }
+
+             .report-filter-row-code {
+                 flex-wrap: nowrap;
+             }
+
+             .report-filter-row-date input,
+             .report-filter-row-date select,
+             .report-filter-row-date .btn {
+                 flex: 1 1 calc(50% - 4px);
+                 width: auto;
+                 max-width: none;
+             }
+
+             .report-filter-row-code input {
+                 flex: 1 1 0;
+                 width: 50%;
+                 max-width: none;
+             }
+
+             .code-entry {
+                 position: relative;
+                 scroll-margin-top: 90px;
+                 scroll-margin-bottom: 180px;
+             }
+
+             .code-entry input {
+                 width: 90px;
+                 min-width: 90px;
+             }
+        }
+
+        .jalali-date-input {
+             cursor: pointer;
+             background: #fff;
+        }
+
+        .jalali-picker-overlay {
+             position: fixed;
+             inset: 0;
+             z-index: 9999;
+             display: none;
+             align-items: center;
+             justify-content: center;
+             background: rgba(0,0,0,0.35);
+             padding: 12px;
+        }
+
+        .jalali-picker-overlay.visible {
+             display: flex;
+        }
+
+        .jalali-picker {
+             width: min(360px, 100%);
+             max-height: min(520px, 90vh);
+             overflow: hidden;
+             background: #fff;
+             border-radius: 14px;
+             box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+             direction: rtl;
+        }
+
+        .jalali-picker-header {
+             display: flex;
+             align-items: center;
+             justify-content: space-between;
+             gap: 8px;
+             padding: 12px;
+             background: #f8f9fa;
+             border-bottom: 1px solid #e5e7e9;
+        }
+
+        .jalali-picker-header button {
+             border: none;
+             background: #e9ecef;
+             border-radius: 7px;
+             width: 38px;
+             height: 38px;
+             cursor: pointer;
+             font-size: 1.1rem;
+             font-family: inherit;
+        }
+
+        .jalali-picker-title {
+             flex: 1;
+             text-align: center;
+             font-weight: bold;
+             color: var(--primary-color);
+        }
+
+        .jalali-weekdays,
+        .jalali-days {
+             display: grid;
+             grid-template-columns: repeat(7, 1fr);
+             gap: 4px;
+             padding: 8px 10px 0;
+        }
+
+        .jalali-weekdays div {
+             text-align: center;
+             font-size: 0.78rem;
+             color: #777;
+             font-weight: bold;
+             padding: 5px 0;
+        }
+
+        .jalali-days {
+             padding-bottom: 10px;
+        }
+
+        .jalali-day {
+             min-height: 38px;
+             border: none;
+             border-radius: 7px;
+             background: #f4f6f7;
+             cursor: pointer;
+             font-family: inherit;
+             font-size: 0.9rem;
+        }
+
+        .jalali-day:hover {
+             background: #e8f4fc;
+        }
+
+        .jalali-day.today {
+             outline: 2px solid var(--accent-color);
+        }
+
+        .jalali-day.selected {
+             background: var(--accent-color);
+             color: #fff;
+             font-weight: bold;
+        }
+
+        .jalali-day.empty {
+             visibility: hidden;
+             cursor: default;
+        }
+
+        .jalali-picker-footer {
+             display: flex;
+             gap: 8px;
+             padding: 10px;
+             border-top: 1px solid #e5e7e9;
+        }
+
+        .jalali-picker-footer .btn {
+             flex: 1;
+             margin: 0;
+        }
+
+        @media (max-width: 600px) {
+             .jalali-picker-overlay {
+                 align-items: flex-end;
+                 padding: 0;
+             }
+
+             .jalali-picker {
+                 width: 100%;
+                 border-radius: 14px 14px 0 0;
+                 max-height: 82vh;
+             }
+
+             .jalali-day {
+                 min-height: 40px;
+             }
+        }
+
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Tahoma, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 950px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 10px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        h1 {
+            font-size: 1.6rem;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+        }
+
+        /* تب‌ها */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 10px 14px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: #7f8c8d;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-color);
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* فرم‌ها */
+        .action-bar {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: auto;
+            min-width: 100px;
+            padding: 9px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus {
+            outline: 2px solid var(--accent-color);
+            border-color: transparent;
+        }
+
+        .btn {
+            padding: 9px 13px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            margin: 3px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.85;
+        }
+
+        /* جدول */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 10px 7px;
+            border: 1px solid #dfe6e9;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+        }
+
+        .summary-card {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 1.05rem;
+            font-weight: bold;
+        }
+
+        .info-card {
+            background: #eef6fb;
+            border-right: 4px solid var(--accent-color);
+            padding: 12px;
+            border-radius: 6px;
+            margin: 12px 0;
+        }
+
+        .warning-card {
+            background: #fff7e6;
+            border-right: 4px solid var(--warning-color);
+            padding: 12px;
+            border-radius: 6px;
+            margin: 12px 0;
+        }
+
+        .small-input {
+            width: 90px !important;
+            min-width: 70px !important;
+            padding: 7px !important;
+        }
+
+        .code-entry {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 7px;
+        }
+
+        .code-entry.visible {
+            display: flex;
+        }
+
+        .code-entry input {
+            width: 85px;
+            padding: 7px;
+            text-align: center;
+        }
+
+        .part-name {
+            font-weight: bold;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 25px;
+            color: #777;
+        }
+
+        .edit-input {
+            width: 90px !important;
+            min-width: 70px !important;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 5px;
+            }
+
+            .app-container {
+                padding: 12px;
+                border-radius: 10px;
+            }
+
+            h1 {
+                font-size: 1.3rem;
+            }
+
+            h2 {
+                font-size: 1.1rem;
+            }
+
+            .tab-btn {
+                padding: 8px 9px;
+                font-size: 0.8rem;
+            }
+
+            th, td {
+                padding: 7px 4px;
+                font-size: 0.78rem;
+            }
+
+            .action-bar input,
+            .action-bar select {
+                width: 100%;
+            }
+
+            .action-bar .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <h1>مدیریت حقوق تولید 🧵</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('settings', this)">
+            تنظیمات قطعات
+        </button>
+
+        <button class="tab-btn" onclick="openTab('calc', this)">
+            حقوق و دستمزد
+        </button>
+
+        <button class="tab-btn" onclick="openTab('reports', this)">
+            گزارشات
+        </button>
+
+        <button class="tab-btn" onclick="openTab('data', this)">
+            بک‌آپ و مدیریت
+        </button>
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- تنظیمات قطعات -->
+    <!-- ===================================================== -->
+
+    <div id="settings" class="tab-content active">
+
+        <h2>تعریف قطعات و نرخ‌ها</h2>
+
+        <div class="action-bar">
+
+            <input
+                type="text"
+                id="new-part-name"
+                placeholder="نام قسمت"
+            >
+
+            <input
+                type="number"
+                id="new-part-price"
+                placeholder="قیمت هر عدد"
+            >
+
+            <button class="btn btn-primary" onclick="addPart()">
+                افزودن قسمت
+            </button>
+
+        </div>
+
+        <div class="info-card">
+            نیرو قسمت‌هایی را که کار می‌کند یک‌بار در این بخش تعریف می‌کند
+            و قیمت هر قسمت را نیز وارد می‌کند.
+        </div>
+
+        <div class="table-container">
+            <table id="parts-table">
+                <thead>
+                    <tr>
+                        <th>نام قسمت</th>
+                        <th>قیمت واحد</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+
+                <tbody></tbody>
+            </table>
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- حقوق و دستمزد -->
+    <!-- ===================================================== -->
+
+    <div id="calc" class="tab-content">
+
+        <h2>حقوق و دستمزد</h2>
+
+        <div class="action-bar">
+
+            <button
+                class="btn btn-success"
+                onclick="loadAllPartsToCalc()"
+            >
+                🔄 بارگذاری قسمت‌ها
+            </button>
+
+            <button
+                class="btn btn-primary"
+                onclick="printWorkReport()"
+            >
+                🖨️ چاپ کارکرد
+            </button>
+
+            <button
+                class="btn btn-warning"
+                onclick="startNewWorker()"
+            >
+                🧹 شروع ثبت فرد جدید
+            </button>
+
+        </div>
+
+        <div class="info-card">
+            برای ثبت کارکرد، روی «ثبت کد» قسمت موردنظر بزنید،
+            سپس کد طاقه را وارد کنید.
+        </div>
+
+        <div class="table-container">
+
+            <table id="calc-table">
+
+                <thead>
+                    <tr>
+                        <th>قسمت</th>
+                        <th>قیمت</th>
+                        <th>تعداد</th>
+                        <th>جمع ردیف</th>
+                    </tr>
+                </thead>
+
+                <tbody></tbody>
+
+            </table>
+
+        </div>
+
+        <div class="summary-card" id="total-summary">
+            مجموع کل حقوق: ۰ تومان
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- گزارشات -->
+    <!-- ===================================================== -->
+
+    <div id="reports" class="tab-content">
+
+        <h2>گزارشات کارکرد</h2>
+
+        <div class="report-filters">
+
+            <h3>فیلتر گزارش</h3>
+
+            <div class="report-filter-row report-filter-row-date">
+
+                <select id="report-part-filter">
+                    <option value="">همه قسمت‌ها</option>
+                </select>
+
+                <input type="text" id="report-from-date"
+                       class="jalali-date-input"
+                       placeholder="از تاریخ"
+                       readonly
+                       onclick="openJalaliPicker('report-from-date')">
+
+                <input type="text" id="report-to-date"
+                       class="jalali-date-input"
+                       placeholder="تا تاریخ"
+                       readonly
+                       onclick="openJalaliPicker('report-to-date')">
+
+                <button class="btn btn-primary" onclick="applyReportFilter()">
+                    نمایش گزارش
+                </button>
+
+                <button class="btn btn-warning" onclick="clearReportFilter()">
+                    حذف فیلتر
+                </button>
+
+            </div>
+
+            <div class="report-filter-row report-filter-row-code">
+
+                <input type="number" id="report-from-code"
+                       placeholder="از کد" inputmode="numeric">
+
+                <input type="number" id="report-to-code"
+                       placeholder="تا کد" inputmode="numeric">
+
+            </div>
+
+            <div class="info-card">
+                قسمت و بازه موردنظر را انتخاب کنید. خالی گذاشتن هر فیلتر یعنی محدودیتی از آن جهت اعمال نشود.
+            </div>
+
+        </div>
+
+        <div class="summary-card" id="report-total-summary">
+            مجموع کل کارکرد: ۰
+            <br>
+            مجموع کل حقوق: ۰ تومان
+        </div>
+
+        <h3>گزارش کارکرد</h3>
+
+        <div class="table-container report-scroll">
+
+            <table id="part-report-table">
+
+                <thead>
+                    <tr>
+                        <th>تاریخ</th>
+                        <th>قسمت</th>
+                        <th>کد</th>
+                        <th>تعداد</th>
+                        <th>مبلغ</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+
+                <tbody></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ===================================================== -->
+    <!-- مدیریت داده -->
+    <!-- ===================================================== -->
+
+    <div id="data" class="tab-content">
+
+        <h2>بک‌آپ و مدیریت داده‌ها</h2>
+
+        <div class="info-card">
+            فایل بک‌آپ برنامه کارخانه را می‌توانید از این قسمت وارد کنید.
+            برنامه فقط اطلاعات کد طاقه و تعداد را از آن استفاده می‌کند.
+        </div>
+
+        <button
+            class="btn btn-primary"
+            onclick="importFactoryBackup()"
+        >
+            📤 بارگذاری بک‌آپ کارخانه
+        </button>
+
+        <button
+            class="btn btn-success"
+            onclick="exportJSON()"
+        >
+            📥 خروجی گرفتن از اطلاعات حقوق
+        </button>
+
+        <button
+            class="btn btn-success"
+            onclick="importOwnBackup()"
+        >
+            📤 بازیابی اطلاعات حقوق
+        </button>
+
+        <hr>
+
+        <div class="warning-card" id="factory-data-status">
+            هنوز بک‌آپ کارخانه بارگذاری نشده است.
+        </div>
+
+        <hr>
+
+        <button
+            class="btn btn-danger"
+            onclick="clearAllData()"
+        >
+            ⚠️ پاک کردن تمام اطلاعات
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    /* =========================================================
+       داده‌های اصلی برنامه
+       ========================================================= */
+
+    let parts =
+        JSON.parse(localStorage.getItem('salary_parts')) || [];
+
+    let factoryRecords =
+        JSON.parse(localStorage.getItem('factory_records')) || [];
+
+    let workRecords =
+        JSON.parse(localStorage.getItem('salary_work_records')) || [];
+
+    let calcItems = [];
+
+
+    /* =========================================================
+       ذخیره‌سازی
+       ========================================================= */
+
+    function saveParts() {
+        localStorage.setItem(
+            'salary_parts',
+            JSON.stringify(parts)
+        );
+    }
+
+    function saveFactoryRecords() {
+        localStorage.setItem(
+            'factory_records',
+            JSON.stringify(factoryRecords)
+        );
+    }
+
+    function saveWorkRecords() {
+        localStorage.setItem(
+            'salary_work_records',
+            JSON.stringify(workRecords)
+        );
+    }
+
+
+    /* =========================================================
+       تب‌ها
+       ========================================================= */
+
+    function openTab(tabId, button) {
+
+        document
+            .querySelectorAll('.tab-content')
+            .forEach(t => t.classList.remove('active'));
+
+        document
+            .querySelectorAll('.tab-btn')
+            .forEach(b => b.classList.remove('active'));
+
+        document
+            .getElementById(tabId)
+            .classList.add('active');
+
+        if (button) {
+            button.classList.add('active');
+        }
+
+        if (tabId === 'calc') {
+            renderCalcTable();
+        }
+
+        if (tabId === 'reports') {
+            renderReports();
+        }
+
+        if (tabId === 'data') {
+            updateFactoryStatus();
+        }
+    }
+
+
+    /* =========================================================
+       تاریخ شمسی دستگاه
+       ========================================================= */
+
+    function getPersianDate() {
+
+        const now = new Date();
+
+        try {
+
+            return new Intl.DateTimeFormat(
+                'fa-IR-u-ca-persian',
+                {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }
+            ).format(now);
+
+        } catch (error) {
+
+            return now.toLocaleDateString('fa-IR');
+
+        }
+    }
+
+
+    /* =========================================================
+       افزودن قسمت
+       ========================================================= */
+
+    function addPart() {
+
+        const name =
+            document.getElementById('new-part-name').value.trim();
+
+        const price =
+            parseFloat(
+                document.getElementById('new-part-price').value
+            );
+
+        if (!name) {
+            alert('لطفاً نام قسمت را وارد کنید.');
+            return;
+        }
+
+        if (!price || price <= 0) {
+            alert('لطفاً قیمت معتبر وارد کنید.');
+            return;
+        }
+
+        const duplicate = parts.some(
+            p => p.name === name
+        );
+
+        if (duplicate) {
+            alert('این قسمت قبلاً ثبت شده است.');
+            return;
+        }
+
+        parts.push({
+            name: name,
+            price: price
+        });
+
+        saveParts();
+
+        renderPartsTable();
+
+        document.getElementById('new-part-name').value = '';
+        document.getElementById('new-part-price').value = '';
+    }
+
+
+    /* =========================================================
+       نمایش قسمت‌ها
+       ========================================================= */
+
+    function renderPartsTable() {
+
+        const tbody =
+            document.querySelector('#parts-table tbody');
+
+        tbody.innerHTML = '';
+
+        if (parts.length === 0) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="empty-message">
+                        هنوز قسمتی تعریف نشده است.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        parts.forEach((part, index) => {
+
+            tbody.innerHTML += `
+                <tr>
+
+                    <td>
+                        ${escapeHtml(part.name)}
+                    </td>
+
+                    <td>
+                        ${formatNumber(part.price)}
+                    </td>
+
+                    <td>
+
+                        <button
+                            class="btn btn-danger"
+                            onclick="deletePart(${index})"
+                        >
+                            حذف
+                        </button>
+
+                    </td>
+
+                </tr>
+            `;
+        });
+    }
+
+
+    /* =========================================================
+       حذف قسمت
+       ========================================================= */
+
+    function deletePart(index) {
+
+        const part = parts[index];
+
+        if (!confirm(
+            `آیا از حذف قسمت «${part.name}» مطمئن هستید؟`
+        )) {
+            return;
+        }
+
+        parts.splice(index, 1);
+
+        saveParts();
+
+        renderPartsTable();
+    }
+
+
+    /* =========================================================
+       بارگذاری قسمت‌ها در حقوق
+       ========================================================= */
+
+    function loadAllPartsToCalc() {
+
+        calcItems = parts.map(part => ({
+            ...part
+        }));
+
+        renderCalcTable();
+    }
+
+
+    /* =========================================================
+       نمایش جدول حقوق
+       ========================================================= */
+
+    function renderCalcTable() {
+
+        const tbody =
+            document.querySelector('#calc-table tbody');
+
+        tbody.innerHTML = '';
+
+        if (calcItems.length === 0) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="empty-message">
+                        ابتدا قسمت‌ها را از بخش تنظیمات تعریف کنید.
+                    </td>
+                </tr>
+            `;
+
+            updateTotalSummary();
+            return;
+        }
+
+        calcItems.forEach((item, index) => {
+
+            const total =
+                getPartTotal(item.name);
+
+            tbody.innerHTML += `
+                <tr>
+
+                    <td class="part-name">
+                        ${escapeHtml(item.name)}
+
+                        <div
+                            id="entry-${index}"
+                            class="code-entry"
+                        >
+
+                            <input
+                                type="number"
+                                id="code-input-${index}"
+                                placeholder="کد"
+                                inputmode="numeric"
+                                enterkeyhint="done"
+                                onkeydown="handleCodeInputKeydown(event, ${index})"
+                            >
+
+                            <button
+                                class="btn btn-success"
+                                onclick="registerCode(${index})"
+                            >
+                                ثبت
+                            </button>
+
+                            <button
+                                class="btn btn-danger"
+                                onclick="closeCodeInput(${index})"
+                            >
+                                خروج
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                    <td>
+                        ${formatNumber(item.price)}
+                    </td>
+
+                    <td>
+
+                        <button
+                            class="btn btn-primary"
+                            onclick="showCodeInput(${index})"
+                        >
+                            ثبت کد
+                        </button>
+
+                        <div>
+                            کارکرد:
+                            <strong>
+                                ${formatNumber(total.count)}
+                            </strong>
+                        </div>
+
+                    </td>
+
+                    <td id="calc-total-${index}">
+                        ${formatNumber(total.amount)}
+                    </td>
+
+                </tr>
+            `;
+        });
+
+        updateTotalSummary();
+    }
+
+
+    /* =========================================================
+       باز کردن ورودی کد
+       ========================================================= */
+
+    function showCodeInput(index) {
+
+        document
+            .querySelectorAll('.code-entry')
+            .forEach(el => el.classList.remove('visible'));
+
+        const entry =
+            document.getElementById(`entry-${index}`);
+
+        entry.classList.add('visible');
+
+        const input =
+            document.getElementById(`code-input-${index}`);
+
+        input.value = '';
+        input.focus();
+
+        keepCodeInputVisible(index);
+    }
+
+
+    /* =========================================================
+       کلید Enter / تأیید موبایل
+       ========================================================= */
+
+    function handleCodeInputKeydown(event, index) {
+
+        if (event.key === 'Enter' || event.keyCode === 13) {
+            event.preventDefault();
+            registerCode(index);
+        }
+    }
+
+    function keepCodeInputVisible(index) {
+
+        const entry =
+            document.getElementById(`entry-${index}`);
+
+        const input =
+            document.getElementById(`code-input-${index}`);
+
+        if (!entry || !input) return;
+
+        setTimeout(() => {
+
+            entry.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+            });
+
+            input.focus();
+
+        }, 120);
+    }
+
+    /* =========================================================
+       خروج از ورودی
+       ========================================================= */
+
+    function closeCodeInput(index) {
+
+        const entry =
+            document.getElementById(`entry-${index}`);
+
+        entry.classList.remove('visible');
+
+        const input =
+            document.getElementById(`code-input-${index}`);
+
+        input.value = '';
+    }
+
+
+    /* =========================================================
+       ثبت کد
+       ========================================================= */
+
+    function registerCode(index) {
+
+        const part = calcItems[index];
+
+        const input =
+            document.getElementById(`code-input-${index}`);
+
+        const code = parseInt(input.value);
+
+        if (!code || code <= 0) {
+
+            alert('لطفاً کد طاقه را وارد کنید.');
+
+            input.focus();
+
+            return;
+        }
+
+
+        /* پیدا کردن کد در بک‌آپ کارخانه */
+
+        const factoryRecord =
+            factoryRecords.find(
+                record => Number(record.code) === code
+            );
+
+
+        if (!factoryRecord) {
+
+            alert('کد مورد نظر یافت نشد.');
+
+            input.focus();
+
+            return;
+        }
+
+
+        /* جلوگیری از تکراری شدن کد
+           فقط در همان قسمت */
+
+        const duplicate =
+            workRecords.some(
+                record =>
+                    record.part === part.name &&
+                    Number(record.code) === code
+            );
+
+
+        if (duplicate) {
+
+            alert(
+                `کد ${code} قبلاً در قسمت «${part.name}» ثبت شده است.`
+            );
+
+            input.focus();
+
+            return;
+        }
+
+
+        /* تعداد از بک‌آپ کارخانه */
+
+        const count =
+            Number(factoryRecord.count) || 0;
+
+
+        /* محاسبه مبلغ */
+
+        const amount =
+            count * Number(part.price);
+
+
+        /* ثبت تاریخ شمسی */
+
+        const date =
+            getPersianDate();
+
+
+        const newRecord = {
+
+            id: Date.now() + Math.random(),
+
+            date: date,
+
+            part: part.name,
+
+            code: code,
+
+            count: count,
+
+            price: Number(part.price),
+
+            amount: amount
+        };
+
+
+        workRecords.push(newRecord);
+
+        saveWorkRecords();
+
+
+        /* بعد از ثبت ورودی دوباره خالی شود */
+
+        input.value = '';
+        renderCalcTable();
+        renderReports();
+
+        showCodeInput(index);
+    }
+
+
+    /* =========================================================
+       محاسبه جمع یک قسمت
+       ========================================================= */
+
+    function getPartTotal(partName) {
+
+        let count = 0;
+        let amount = 0;
+
+        workRecords.forEach(record => {
+
+            if (record.part === partName) {
+
+                count += Number(record.count) || 0;
+
+                amount += Number(record.amount) || 0;
+            }
+        });
+
+        return {
+            count,
+            amount
+        };
+    }
+
+
+    /* =========================================================
+       جمع کل
+       ========================================================= */
+
+    function updateTotalSummary() {
+
+        let total = 0;
+
+        workRecords.forEach(record => {
+
+            total += Number(record.amount) || 0;
+
+        });
+
+        document.getElementById(
+            'total-summary'
+        ).innerText =
+            `مجموع کل حقوق: ${formatNumber(total)} تومان`;
+    }
+
+
+    /* =========================================================
+       گزارشات و فیلترها
+       جدید به قدیم
+       ========================================================= */
+
+    function renderReports() {
+        populateReportPartFilter();
+        renderFilteredReport();
+    }
+
+    function populateReportPartFilter() {
+
+        const select =
+            document.getElementById('report-part-filter');
+
+        if (!select) return;
+
+        const currentValue = select.value;
+
+        select.innerHTML =
+            '<option value="">همه قسمت‌ها</option>';
+
+        parts.forEach(part => {
+
+            const option = document.createElement('option');
+
+            option.value = part.name;
+            option.textContent = part.name;
+
+            select.appendChild(option);
+        });
+
+        if (parts.some(part => part.name === currentValue)) {
+            select.value = currentValue;
+        }
+    }
+
+
+    /* =========================================================
+       انتخاب‌گر تاریخ شمسی گزارشات
+       ========================================================= */
+
+    let jalaliPickerTarget = null;
+    let jalaliPickerYear = 1405;
+    let jalaliPickerMonth = 1;
+
+    const jalaliMonthNames = [
+        'فروردین', 'اردیبهشت', 'خرداد',
+        'تیر', 'مرداد', 'شهریور',
+        'مهر', 'آبان', 'آذر',
+        'دی', 'بهمن', 'اسفند'
+    ];
+
+    function toPersianDigits(value) {
+        return String(value).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+    }
+
+    function toEnglishDigits(value) {
+        return String(value)
+            .replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
+            .replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+    }
+
+    function gregorianToJalali(gy, gm, gd) {
+        const gdm = [0,31,59,90,120,151,181,212,243,273,304,334];
+        let gy2 = gy + 1;
+        let days = 355666 + (365 * gy) +
+            Math.floor((gy2 + 3) / 4) -
+            Math.floor((gy2 + 99) / 100) +
+            Math.floor((gy2 + 399) / 400) +
+            gd + gdm[gm - 1];
+
+        if (gm > 2 &&
+            ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0)) {
+            days += 1;
+        }
+
+        let jy = -1595 + 33 * Math.floor(days / 12053);
+        days %= 12053;
+
+        jy += 4 * Math.floor(days / 1461);
+        days %= 1461;
+
+        if (days > 365) {
+            jy += Math.floor((days - 1) / 365);
+            days = (days - 1) % 365;
+        }
+
+        const jm = days < 186
+            ? 1 + Math.floor(days / 31)
+            : 7 + Math.floor((days - 186) / 30);
+
+        const jd = 1 + (days < 186
+            ? days % 31
+            : (days - 186) % 30);
+
+        return [jy, jm, jd];
+    }
+
+    function jalaliToGregorian(jy, jm, jd) {
+        jy += 1595;
+
+        let days = -355668 +
+            (365 * jy) +
+            Math.floor(jy / 33) * 8 +
+            Math.floor(((jy % 33) + 3) / 4) +
+            jd +
+            (jm < 7 ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
+
+        let gy = 400 * Math.floor(days / 146097);
+        days %= 146097;
+
+        if (days > 36524) {
+            gy += 100 * Math.floor(--days / 36524);
+            days %= 36524;
+            if (days >= 365) days++;
+        }
+
+        gy += 4 * Math.floor(days / 1461);
+        days %= 1461;
+
+        if (days > 365) {
+            gy += Math.floor((days - 1) / 365);
+            days = (days - 1) % 365;
+        }
+
+        const gd = days + 1;
+        const sal_a = [
+            0,31,
+            ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) ? 29 : 28,
+            31,30,31,30,31,31,30,31,30,31
+        ];
+
+        let gm = 0;
+        let remaining = gd;
+
+        while (remaining > sal_a[gm + 1]) {
+            remaining -= sal_a[gm + 1];
+            gm++;
+        }
+
+        return [gy, gm + 1, remaining];
+    }
+
+    function jalaliMonthLength(year, month) {
+        if (month <= 6) return 31;
+        if (month <= 11) return 30;
+        return isJalaliLeap(year) ? 30 : 29;
+    }
+
+    function isJalaliLeap(year) {
+        const g = jalaliToGregorian(year, 12, 1);
+        const next = new Date(g[0], g[1] - 1, g[2]);
+        next.setDate(next.getDate() + 365);
+        const j = gregorianToJalali(
+            next.getFullYear(),
+            next.getMonth() + 1,
+            next.getDate()
+        );
+        return j[0] !== year;
+    }
+
+    function jalaliWeekday(year, month, day) {
+        const g = jalaliToGregorian(year, month, day);
+        const date = new Date(g[0], g[1] - 1, g[2]);
+        // JS: Sunday=0 ... Saturday=6
+        // Persian week: Saturday=0 ... Friday=6
+        return (date.getDay() + 1) % 7;
+    }
+
+    function getTodayJalali() {
+        const now = new Date();
+        return gregorianToJalali(
+            now.getFullYear(),
+            now.getMonth() + 1,
+            now.getDate()
+        );
+    }
+
+    function openJalaliPicker(targetId) {
+        jalaliPickerTarget = targetId;
+
+        const input = document.getElementById(targetId);
+        const value = normalizePersianDate(input.value);
+
+        if (dateToNumber(value) !== null) {
+            const p = value.split('/').map(Number);
+            jalaliPickerYear = p[0];
+            jalaliPickerMonth = p[1];
+        } else {
+            const today = getTodayJalali();
+            jalaliPickerYear = today[0];
+            jalaliPickerMonth = today[1];
+        }
+
+        renderJalaliPicker();
+        document.getElementById('jalali-picker-overlay')
+            .classList.add('visible');
+    }
+
+    function closeJalaliPicker(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('jalali-picker-overlay')
+            .classList.remove('visible');
+        jalaliPickerTarget = null;
+    }
+
+    function changeJalaliMonth(delta) {
+        jalaliPickerMonth += delta;
+
+        if (jalaliPickerMonth < 1) {
+            jalaliPickerMonth = 12;
+            jalaliPickerYear--;
+        }
+
+        if (jalaliPickerMonth > 12) {
+            jalaliPickerMonth = 1;
+            jalaliPickerYear++;
+        }
+
+        renderJalaliPicker();
+    }
+
+    function renderJalaliPicker() {
+        document.getElementById('jalali-picker-title').textContent =
+            `${jalaliMonthNames[jalaliPickerMonth - 1]} ${toPersianDigits(jalaliPickerYear)}`;
+
+        const daysContainer =
+            document.getElementById('jalali-picker-days');
+
+        daysContainer.innerHTML = '';
+
+        const firstWeekday =
+            jalaliWeekday(jalaliPickerYear, jalaliPickerMonth, 1);
+
+        const monthLength =
+            jalaliMonthLength(jalaliPickerYear, jalaliPickerMonth);
+
+        const input =
+            jalaliPickerTarget
+                ? document.getElementById(jalaliPickerTarget)
+                : null;
+
+        const selected =
+            input && dateToNumber(input.value)
+                ? normalizePersianDate(input.value).split('/').map(Number)
+                : null;
+
+        const today = getTodayJalali();
+
+        for (let i = 0; i < firstWeekday; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'jalali-day empty';
+            daysContainer.appendChild(empty);
+        }
+
+        for (let day = 1; day <= monthLength; day++) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'jalali-day';
+            button.textContent = toPersianDigits(day);
+
+            if (
+                today[0] === jalaliPickerYear &&
+                today[1] === jalaliPickerMonth &&
+                today[2] === day
+            ) {
+                button.classList.add('today');
+            }
+
+            if (
+                selected &&
+                selected[0] === jalaliPickerYear &&
+                selected[1] === jalaliPickerMonth &&
+                selected[2] === day
+            ) {
+                button.classList.add('selected');
+            }
+
+            button.onclick = () => selectJalaliDate(day);
+            daysContainer.appendChild(button);
+        }
+    }
+
+    function selectJalaliDate(day) {
+        if (!jalaliPickerTarget) return;
+
+        const input =
+            document.getElementById(jalaliPickerTarget);
+
+        input.value =
+            `${toPersianDigits(jalaliPickerYear)}/` +
+            `${toPersianDigits(String(jalaliPickerMonth).padStart(2, '0'))}/` +
+            `${toPersianDigits(String(day).padStart(2, '0'))}`;
+
+        closeJalaliPicker();
+    }
+
+    function selectTodayJalali() {
+        const today = getTodayJalali();
+        jalaliPickerYear = today[0];
+        jalaliPickerMonth = today[1];
+        selectJalaliDate(today[2]);
+    }
+
+
+    function normalizePersianDate(value) {
+
+        return String(value || '')
+            .replace(/[۰-۹]/g, digit =>
+                String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))
+            )
+            .replace(/[٠-٩]/g, digit =>
+                String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit))
+            )
+            .replace(/[-.]/g, '/')
+            .replace(/\s+/g, '')
+            .trim();
+    }
+
+    function dateToNumber(value) {
+
+        const normalized = normalizePersianDate(value);
+
+        const match =
+            normalized.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+
+        if (!match) return null;
+
+        return (
+            Number(match[1]) * 10000 +
+            Number(match[2]) * 100 +
+            Number(match[3])
+        );
+    }
+
+    function applyReportFilter() {
+
+        const fromDateInput =
+            document.getElementById('report-from-date');
+
+        const toDateInput =
+            document.getElementById('report-to-date');
+
+        const fromCodeInput =
+            document.getElementById('report-from-code');
+
+        const toCodeInput =
+            document.getElementById('report-to-code');
+
+        const fromDate = fromDateInput.value.trim();
+        const toDate = toDateInput.value.trim();
+
+        if (fromDate && dateToNumber(fromDate) === null) {
+            alert('تاریخ «از تاریخ» معتبر نیست. نمونه: ۱۴۰۵/۰۷/۰۱');
+            fromDateInput.focus();
+            return;
+        }
+
+        if (toDate && dateToNumber(toDate) === null) {
+            alert('تاریخ «تا تاریخ» معتبر نیست. نمونه: ۱۴۰۵/۰۷/۳۰');
+            toDateInput.focus();
+            return;
+        }
+
+        if (
+            fromDate &&
+            toDate &&
+            dateToNumber(fromDate) > dateToNumber(toDate)
+        ) {
+            alert('تاریخ شروع نباید بعد از تاریخ پایان باشد.');
+            return;
+        }
+
+        const fromCode =
+            fromCodeInput.value ? Number(fromCodeInput.value) : null;
+
+        const toCode =
+            toCodeInput.value ? Number(toCodeInput.value) : null;
+
+        if (
+            fromCode !== null &&
+            toCode !== null &&
+            fromCode > toCode
+        ) {
+            alert('کد شروع نباید بزرگ‌تر از کد پایان باشد.');
+            return;
+        }
+
+        renderFilteredReport();
+    }
+
+    function clearReportFilter() {
+
+        document.getElementById('report-part-filter').value = '';
+        document.getElementById('report-from-date').value = '';
+        document.getElementById('report-to-date').value = '';
+        document.getElementById('report-from-code').value = '';
+        document.getElementById('report-to-code').value = '';
+
+        renderFilteredReport();
+    }
+
+    function renderFilteredReport() {
+
+        const tbody =
+            document.querySelector('#part-report-table tbody');
+
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        const partFilter =
+            document.getElementById('report-part-filter')?.value || '';
+
+        const fromDate =
+            dateToNumber(
+                document.getElementById('report-from-date')?.value
+            );
+
+        const toDate =
+            dateToNumber(
+                document.getElementById('report-to-date')?.value
+            );
+
+        const fromCodeValue =
+            document.getElementById('report-from-code')?.value;
+
+        const toCodeValue =
+            document.getElementById('report-to-code')?.value;
+
+        const fromCode =
+            fromCodeValue ? Number(fromCodeValue) : null;
+
+        const toCode =
+            toCodeValue ? Number(toCodeValue) : null;
+
+        const filtered =
+            [...workRecords]
+                .filter(record => {
+
+                    if (partFilter && record.part !== partFilter) {
+                        return false;
+                    }
+
+                    const recordDate = dateToNumber(record.date);
+
+                    if (
+                        fromDate !== null &&
+                        (recordDate === null || recordDate < fromDate)
+                    ) {
+                        return false;
+                    }
+
+                    if (
+                        toDate !== null &&
+                        (recordDate === null || recordDate > toDate)
+                    ) {
+                        return false;
+                    }
+
+                    const recordCode = Number(record.code);
+
+                    if (fromCode !== null && recordCode < fromCode) {
+                        return false;
+                    }
+
+                    if (toCode !== null && recordCode > toCode) {
+                        return false;
+                    }
+
+                    return true;
+                })
+                .sort(
+                    (a, b) => Number(b.id) - Number(a.id)
+                );
+
+        if (filtered.length === 0) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="empty-message">
+                        برای فیلتر انتخاب‌شده رکوردی وجود ندارد.
+                    </td>
+                </tr>
+            `;
+
+            updateReportSummary(filtered);
+            return;
+        }
+
+        filtered.forEach(record => {
+
+            tbody.innerHTML += `
+                <tr id="report-row-${record.id}">
+
+                    <td>${escapeHtml(record.date)}</td>
+
+                    <td>${escapeHtml(record.part)}</td>
+
+                    <td>
+                        <span id="code-display-${record.id}">
+                            ${record.code}
+                        </span>
+
+                        <input
+                            id="code-edit-${record.id}"
+                            class="edit-input hidden"
+                            type="number"
+                            inputmode="numeric"
+                            value="${record.code}"
+                        >
+                    </td>
+
+                    <td>${formatNumber(record.count)}</td>
+
+                    <td>${formatNumber(record.amount)}</td>
+
+                    <td>
+
+                        <button
+                            class="btn btn-primary"
+                            id="edit-btn-${record.id}"
+                            onclick="editWorkRecord(${record.id})"
+                        >
+                            ویرایش
+                        </button>
+
+                        <button
+                            class="btn btn-success hidden"
+                            id="save-edit-btn-${record.id}"
+                            onclick="saveEditedWorkRecord(${record.id})"
+                        >
+                            ذخیره
+                        </button>
+
+                        <button
+                            class="btn btn-danger"
+                            onclick="deleteWorkRecord(${record.id})"
+                        >
+                            حذف
+                        </button>
+
+                    </td>
+
+                </tr>
+            `;
+        });
+
+        updateReportSummary(filtered);
+    }
+
+    /* =========================================================
+       ویرایش رکورد
+       ========================================================= */
+
+    function editWorkRecord(id) {
+
+        const display =
+            document.getElementById(`code-display-${id}`);
+
+        const input =
+            document.getElementById(`code-edit-${id}`);
+
+        const editButton =
+            document.getElementById(`edit-btn-${id}`);
+
+        const saveButton =
+            document.getElementById(`save-edit-btn-${id}`);
+
+        display.classList.add('hidden');
+        input.classList.remove('hidden');
+
+        editButton.classList.add('hidden');
+        saveButton.classList.remove('hidden');
+
+        input.focus();
+    }
+
+    /* =========================================================
+       ذخیره ویرایش
+       ========================================================= */
+
+    function saveEditedWorkRecord(id) {
+
+        const record =
+            workRecords.find(
+                item => Number(item.id) === Number(id)
+            );
+
+        if (!record) return;
+
+        const input =
+            document.getElementById(`code-edit-${id}`);
+
+        const newCode = parseInt(input.value);
+
+        if (!newCode || newCode <= 0) {
+            alert('کد معتبر وارد کنید.');
+            input.focus();
+            return;
+        }
+
+        const factoryRecord =
+            factoryRecords.find(
+                item => Number(item.code) === newCode
+            );
+
+        if (!factoryRecord) {
+            alert('کد مورد نظر یافت نشد.');
+            input.focus();
+            return;
+        }
+
+        const duplicate =
+            workRecords.some(
+                item =>
+                    Number(item.id) !== Number(id) &&
+                    item.part === record.part &&
+                    Number(item.code) === newCode
+            );
+
+        if (duplicate) {
+            alert(
+                `کد ${newCode} قبلاً در قسمت «${record.part}» ثبت شده است.`
+            );
+            input.focus();
+            return;
+        }
+
+        record.code = newCode;
+
+        record.count =
+            Number(factoryRecord.count) || 0;
+
+        record.amount =
+            record.count * Number(record.price);
+
+        saveWorkRecords();
+
+        renderReports();
+        renderCalcTable();
+    }
+
+    /* =========================================================
+       حذف کارکرد
+       ========================================================= */
+
+    function deleteWorkRecord(id) {
+
+        const record =
+            workRecords.find(
+                item => Number(item.id) === Number(id)
+            );
+
+        if (!record) return;
+
+        const confirmed =
+            confirm(
+                `آیا می‌خواهید کد ${record.code} از قسمت «${record.part}» حذف شود؟`
+            );
+
+        if (!confirmed) return;
+
+        workRecords =
+            workRecords.filter(
+                item => Number(item.id) !== Number(id)
+            );
+
+        saveWorkRecords();
+
+        renderReports();
+        renderCalcTable();
+    }
+
+    /* =========================================================
+       خلاصه گزارش
+       ========================================================= */
+
+    function updateReportSummary(records = workRecords) {
+
+        let totalCount = 0;
+        let totalAmount = 0;
+
+        records.forEach(record => {
+
+            totalCount += Number(record.count) || 0;
+            totalAmount += Number(record.amount) || 0;
+
+        });
+
+        document.getElementById(
+            'report-total-summary'
+        ).innerHTML =
+            `مجموع کل کارکرد: ${formatNumber(totalCount)}
+             <br>
+             مجموع کل حقوق: ${formatNumber(totalAmount)} تومان`;
+    }
+
+
+
+    /* =========================================================
+       بک‌آپ کارخانه
+       ========================================================= */
+
+    function importFactoryBackup() {
+
+        const input =
+            document.createElement('input');
+
+        input.type = 'file';
+
+        input.accept = '.json,application/json';
+
+
+        input.onchange = event => {
+
+            const file =
+                event.target.files[0];
+
+            if (!file) {
+                return;
+            }
+
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload = readerEvent => {
+
+                try {
+
+                    const content =
+                        JSON.parse(
+                            readerEvent.target.result
+                        );
+
+
+                    /*
+                       ساختار مورد انتظار بک‌آپ کارخانه:
+
+                       {
+                           "nextCode": "630",
+                           "records": [
+                               {
+                                   "code": 343,
+                                   "count": 49,
+                                   "customer": "..."
+                               }
+                           ]
+                       }
+                    */
+
+
+                    if (
+                        !content ||
+                        !Array.isArray(content.records)
+                    ) {
+
+                        alert(
+                            'این فایل، بک‌آپ معتبر برنامه کارخانه نیست.'
+                        );
+
+                        return;
+                    }
+
+
+                    factoryRecords =
+                        content.records
+                            .filter(
+                                record =>
+                                    record.code !== undefined &&
+                                    record.count !== undefined
+                            )
+                            .map(record => ({
+
+                                code:
+                                    Number(record.code),
+
+                                count:
+                                    Number(record.count) || 0
+
+                            }));
+
+
+                    saveFactoryRecords();
+
+                    updateFactoryStatus();
+
+
+                    alert(
+                        `بک‌آپ کارخانه با موفقیت بارگذاری شد.\n` +
+                        `تعداد کدهای قابل استفاده: ${factoryRecords.length}`
+                    );
+
+                } catch (error) {
+
+                    alert(
+                        'خطا در خواندن فایل بک‌آپ کارخانه.'
+                    );
+
+                }
+            };
+
+
+            reader.readAsText(file, 'UTF-8');
+        };
+
+
+        input.click();
+    }
+
+
+    /* =========================================================
+       وضعیت بک‌آپ کارخانه
+       ========================================================= */
+
+    function updateFactoryStatus() {
+
+        const status =
+            document.getElementById('factory-data-status');
+
+
+        if (!factoryRecords.length) {
+
+            status.innerHTML =
+                'هنوز بک‌آپ کارخانه بارگذاری نشده است.';
+
+            return;
+        }
+
+
+        status.innerHTML =
+            `✅ بک‌آپ کارخانه آماده است.
+             تعداد کدهای قابل استفاده:
+             <strong>${formatNumber(factoryRecords.length)}</strong>`;
+    }
+
+
+    /* =========================================================
+       بک‌آپ خود برنامه حقوق
+       ========================================================= */
+
+    function exportJSON() {
+
+        const data = {
+
+            version: 1,
+
+            parts: parts,
+
+            factoryRecords: factoryRecords,
+
+            workRecords: workRecords
+
+        };
+
+
+        const dataStr =
+            "data:application/json;charset=utf-8," +
+            encodeURIComponent(
+                JSON.stringify(data, null, 2)
+            );
+
+
+        const downloadAnchorNode =
+            document.createElement('a');
+
+
+        downloadAnchorNode.setAttribute(
+            "href",
+            dataStr
+        );
+
+
+        downloadAnchorNode.setAttribute(
+            "download",
+            "salary_backup.json"
+        );
+
+
+        document.body.appendChild(
+            downloadAnchorNode
+        );
+
+
+        downloadAnchorNode.click();
+
+        downloadAnchorNode.remove();
+    }
+
+
+    /* =========================================================
+       بازیابی بک‌آپ خود برنامه
+       ========================================================= */
+
+    function importOwnBackup() {
+
+        const input =
+            document.createElement('input');
+
+        input.type = 'file';
+
+        input.accept = '.json,application/json';
+
+
+        input.onchange = event => {
+
+            const file =
+                event.target.files[0];
+
+            if (!file) {
+                return;
+            }
+
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload = readerEvent => {
+
+                try {
+
+                    const content =
+                        JSON.parse(
+                            readerEvent.target.result
+                        );
+
+
+                    /*
+                       بک‌آپ جدید برنامه حقوق
+                    */
+
+                    if (
+                        content &&
+                        Array.isArray(content.parts) &&
+                        Array.isArray(content.workRecords)
+                    ) {
+
+                        parts =
+                            content.parts;
+
+                        factoryRecords =
+                            Array.isArray(content.factoryRecords)
+                                ? content.factoryRecords
+                                : [];
+
+                        workRecords =
+                            content.workRecords;
+
+
+                        saveParts();
+                        saveFactoryRecords();
+                        saveWorkRecords();
+
+
+                        renderPartsTable();
+                        renderReports();
+                        renderCalcTable();
+                        updateFactoryStatus();
+
+
+                        alert(
+                            'اطلاعات برنامه حقوق با موفقیت بازیابی شد.'
+                        );
+
+                        return;
+                    }
+
+
+                    /*
+                       سازگاری با بک‌آپ قدیمی برنامه
+                       که فقط آرایه قسمت‌ها بود.
+                    */
+
+                    if (Array.isArray(content)) {
+
+                        parts = content;
+
+                        saveParts();
+
+                        renderPartsTable();
+
+                        alert(
+                            'اطلاعات قدیمی با موفقیت بازیابی شد.'
+                        );
+
+                        return;
+                    }
+
+
+                    alert(
+                        'ساختار فایل بک‌آپ معتبر نیست.'
+                    );
+
+                } catch (error) {
+
+                    alert(
+                        'خطا در خواندن فایل!'
+                    );
+                }
+            };
+
+
+            reader.readAsText(file, 'UTF-8');
+        };
+
+
+        input.click();
+    }
+
+
+    /* =========================================================
+       چاپ کارکرد؛ گروه‌بندی بر اساس قسمت و مرتب‌سازی صعودی کد
+       ========================================================= */
+
+    function printWorkReport() {
+
+        if (!workRecords.length) {
+            alert('هنوز کارکردی برای چاپ ثبت نشده است.');
+            return;
+        }
+
+        const groups = {};
+
+        workRecords.forEach(record => {
+            if (!groups[record.part]) groups[record.part] = [];
+            groups[record.part].push(record);
+        });
+
+        const partNames = Object.keys(groups);
+
+        let totalCount = 0;
+        let totalAmount = 0;
+
+        let html = `
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>گزارش کارکرد</title>
+<style>
+body{font-family:Tahoma,Arial,sans-serif;margin:25px;color:#222;direction:rtl}
+h1{text-align:center;font-size:20px;margin-bottom:8px}
+.meta{text-align:center;margin-bottom:20px;font-size:12px;color:#555}
+h2{font-size:16px;margin:22px 0 8px;border-bottom:2px solid #333;padding-bottom:6px}
+table{width:100%;border-collapse:collapse;margin-bottom:8px}
+th,td{border:1px solid #777;padding:7px;text-align:center}
+th{background:#eee}
+.part-total{font-weight:bold;text-align:right;margin:8px 0 22px;padding:10px 12px;border:1px solid #555;border-radius:6px;background:#f5f5f5;line-height:2}
+.grand-total{margin-top:25px;border-top:2px solid #222;padding-top:10px;font-weight:bold;font-size:15px}
+@media print{body{margin:12mm}.no-print{display:none}}
+</style>
+</head>
+<body>
+<h1>گزارش کارکرد حقوق</h1>
+<div class="meta">تاریخ چاپ: ${escapeHtml(getPersianDate())}</div>
+`;
+
+        partNames.sort((a,b) => a.localeCompare(b,'fa'));
+
+        partNames.forEach(partName => {
+            const rows = [...groups[partName]].sort((a,b) => Number(a.code)-Number(b.code));
+            const price = rows.length ? Number(rows[0].price) || 0 : 0;
+            let partCount = 0;
+            let partAmount = 0;
+
+            html += `<h2>${escapeHtml(partName)} — قیمت واحد: ${formatNumber(price)} تومان</h2>`;
+            html += `<table><thead><tr><th>ردیف</th><th>کد طاقه</th><th>تعداد</th><th>مبلغ</th></tr></thead><tbody>`;
+
+            rows.forEach((record,index) => {
+                const count = Number(record.count) || 0;
+                const amount = Number(record.amount) || 0;
+                partCount += count;
+                partAmount += amount;
+                totalCount += count;
+                totalAmount += amount;
+                html += `<tr><td>${index+1}</td><td>${escapeHtml(String(record.code))}</td><td>${formatNumber(count)}</td><td>${formatNumber(amount)} تومان</td></tr>`;
+            });
+
+            html += `</tbody></table><div class="part-total">جمع کارکرد قسمت «${escapeHtml(partName)}»<br>جمع تعداد: ${formatNumber(partCount)} &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp; جمع مبلغ: ${formatNumber(partAmount)} تومان</div>`;
+        });
+
+        html += `<div class="grand-total">جمع کل کارکرد: ${formatNumber(totalCount)} &nbsp;&nbsp; | &nbsp;&nbsp; جمع کل حقوق: ${formatNumber(totalAmount)} تومان</div>`;
+        html += `</body></html>`;
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('پنجره چاپ توسط مرورگر مسدود شده است.');
+            return;
+        }
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => printWindow.print(), 300);
+    }
+
+
+    /* =========================================================
+       شروع ثبت فرد جدید؛ فقط کارکردهای قبلی حذف می‌شوند
+       ========================================================= */
+
+    function startNewWorker() {
+
+        if (!workRecords.length) {
+            alert('کارکردی برای پاک کردن وجود ندارد.');
+            return;
+        }
+
+        const confirmed = confirm(
+            'کارکردهای ثبت‌شده برای فرد فعلی حذف می‌شوند.\n\n' +
+            'قسمت‌ها، قیمت‌ها و بک‌آپ کارخانه باقی می‌مانند.\n\n' +
+            'برای اطمینان، قبل از ادامه از «چاپ کارکرد» یا «خروجی گرفتن از اطلاعات حقوق» استفاده کنید.\n\n' +
+            'آیا می‌خواهید ثبت فرد جدید را شروع کنید؟'
+        );
+
+        if (!confirmed) return;
+
+        workRecords = [];
+        calcItems = [];
+        saveWorkRecords();
+
+        renderCalcTable();
+        renderReports();
+
+        alert('کارکرد قبلی پاک شد و برنامه برای ثبت فرد جدید آماده است. قسمت‌ها و قیمت‌ها باقی ماندند.');
+    }
+
+
+    /* =========================================================
+       پاک کردن تمام اطلاعات
+       ========================================================= */
+
+    function clearAllData() {
+
+        if (
+            !confirm(
+                'تمام قسمت‌ها، کارکردها و اطلاعات بک‌آپ کارخانه حذف شوند؟'
+            )
+        ) {
+            return;
+        }
+
+
+        parts = [];
+
+        factoryRecords = [];
+
+        workRecords = [];
+
+        calcItems = [];
+
+
+        localStorage.removeItem('salary_parts');
+        localStorage.removeItem('factory_records');
+        localStorage.removeItem('salary_work_records');
+
+
+        renderPartsTable();
+        renderCalcTable();
+        renderReports();
+        updateFactoryStatus();
+
+
+        alert('تمام اطلاعات پاک شد.');
+    }
+
+
+    /* =========================================================
+       فرمت اعداد
+       ========================================================= */
+
+    function formatNumber(number) {
+
+        return Number(number || 0)
+            .toLocaleString('fa-IR');
+    }
+
+
+    /* =========================================================
+       جلوگیری از ورود HTML در نام‌ها
+       ========================================================= */
+
+    function escapeHtml(value) {
+
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+
+    /* =========================================================
+       تنظیم دوباره جای ورودی هنگام تغییر اندازه کیبورد
+       ========================================================= */
+
+    if (window.visualViewport) {
+
+        window.visualViewport.addEventListener(
+            'resize',
+            () => {
+
+                const activeInput =
+                    document.querySelector(
+                        '.code-entry.visible input'
+                    );
+
+                if (
+                    activeInput &&
+                    document.activeElement === activeInput
+                ) {
+
+                    activeInput.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                        inline: 'nearest'
+                    });
+                }
+            }
+        );
+    }
+
+    /* =========================================================
+       شروع برنامه
+       ========================================================= */
+
+    renderPartsTable();
+
+    renderCalcTable();
+
+    renderReports();
+
+    updateFactoryStatus();
+
+</script>
+
+
+<!-- انتخاب‌گر تاریخ شمسی -->
+<div id="jalali-picker-overlay" class="jalali-picker-overlay"
+     onclick="closeJalaliPicker(event)">
+    <div class="jalali-picker" onclick="event.stopPropagation()">
+        <div class="jalali-picker-header">
+            <button type="button" onclick="changeJalaliMonth(-1)">‹</button>
+            <div id="jalali-picker-title" class="jalali-picker-title"></div>
+            <button type="button" onclick="changeJalaliMonth(1)">›</button>
+        </div>
+
+        <div class="jalali-weekdays">
+            <div>ش</div><div>ی</div><div>د</div><div>س</div>
+            <div>چ</div><div>پ</div><div>ج</div>
+        </div>
+
+        <div id="jalali-picker-days" class="jalali-days"></div>
+
+        <div class="jalali-picker-footer">
+            <button type="button" class="btn btn-primary"
+                    onclick="selectTodayJalali()">امروز</button>
+            <button type="button" class="btn btn-warning"
+                    onclick="closeJalaliPicker()">انصراف</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

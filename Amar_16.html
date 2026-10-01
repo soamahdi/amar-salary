@@ -1,0 +1,3586 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مدیریت تولید</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  font-family:Tahoma,Arial,sans-serif;
+  margin:0;
+  background:#dceeff;
+  color:#222;
+}
+
+.box{
+  width:100%;
+  max-width:1200px;
+  margin:0 auto;
+  padding:10px;
+}
+
+/* منوی تب‌ها */
+.main-menu{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  background:#b9dcf7;
+  padding:5px;
+  border-radius:8px;
+  margin-bottom:10px;
+}
+
+.main-menu button{
+  flex:0 0 auto;
+  min-width:auto;
+  padding:7px 11px;
+  font-size:14px;
+  border:1px solid #8bb8dc;
+  border-radius:6px;
+  background:#fff;
+  color:#174a70;
+  font-weight:bold;
+}
+
+.main-menu button.active{
+  background:#4f9bd1;
+  color:#fff;
+}
+
+/* عناصر عمومی */
+button,
+input,
+select{
+  padding:7px 9px;
+  font-size:14px;
+  font-family:inherit;
+}
+
+button{
+  cursor:pointer;
+  border:1px solid #aaa;
+  border-radius:5px;
+  background:#fff;
+  white-space:nowrap;
+}
+
+input,
+select{
+  width:170px;
+  border:1px solid #aaa;
+  border-radius:5px;
+  background:#fff;
+}
+
+.tab{
+  display:none;
+}
+
+.show{
+  display:block;
+}
+
+.panel{
+  background:#fff;
+  padding:12px;
+  border-radius:9px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+}
+
+h3{
+  margin-top:3px;
+  margin-bottom:10px;
+}
+
+/* جدول‌های عمومی */
+table{
+  width:max-content;
+  max-width:100%;
+  border-collapse:collapse;
+  margin-top:12px;
+  table-layout:auto;
+}
+
+th,
+td{
+  border:1px solid #bbb;
+  padding:6px 8px;
+  text-align:center;
+  white-space:nowrap;
+}
+
+th{
+  background:#eaf3fa;
+}
+
+.table-wrapper,
+.stat-table-wrapper{
+  width:100%;
+  overflow:auto;
+  border:1px solid #aaa;
+  border-radius:6px;
+}
+
+.table-wrapper{
+  max-height:480px;
+}
+
+.table-wrapper table,
+.stat-table{
+  margin-top:0;
+}
+
+/* جدول دفتر برش */
+.table-wrapper table{
+  width:max-content;
+  min-width:0;
+}
+
+/* مشتری و قسمت */
+.customer-row,
+.part-row{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  margin:5px 0;
+  width:100%;
+}
+
+.customer-row span,
+.part-row span{
+  flex:1;
+  min-width:0;
+  overflow-wrap:anywhere;
+  text-align:right;
+}
+
+.customer-row button,
+.part-row button{
+  margin:0;
+  padding:5px 9px;
+  font-size:13px;
+}
+
+/* تنظیمات آمار */
+.stat-settings{
+  display:grid;
+  grid-template-columns:135px minmax(150px,220px);
+  gap:6px 8px;
+  margin-bottom:8px;
+  align-items:center;
+}
+
+.stat-settings label{
+  font-weight:bold;
+  font-size:13px;
+}
+
+.stat-settings input,
+.stat-settings select{
+  width:100%;
+  margin:0;
+  padding:6px 8px;
+}
+
+.stat-settings button{
+  grid-column:1/-1;
+  display:block;
+  min-height:34px;
+  padding:6px 10px;
+}
+
+/* ورودی کد شروع آمار */
+.stat-starts{
+  margin:10px 0;
+  border:1px solid #aaa;
+  border-radius:6px;
+  overflow-x:auto;
+  overflow-y:visible;
+}
+
+.stat-starts table{
+  margin:0;
+  width:max-content;
+  min-width:0;
+}
+
+.stat-starts th,
+.stat-starts td{
+  padding:6px 8px;
+}
+
+.stat-start-input{
+  width:130px!important;
+  padding:6px!important;
+}
+
+.stat-start-note{
+  font-size:12px;
+  color:#555;
+  margin:6px 8px;
+}
+
+/* گزارش آمار */
+.stat-report-wrap{
+  width:100%;
+  overflow:auto;
+  border:1px solid #aaa;
+  border-radius:6px;
+  max-height:560px;
+}
+
+.stat-table-wrapper{
+  max-height:560px;
+}
+
+.stat-table{
+  min-width:0;
+  width:max-content;
+  font-size:13px;
+}
+
+.stat-table th,
+.stat-table td{
+  padding:4px 7px;
+}
+
+.stat-table th{
+  position:sticky;
+  top:0;
+  z-index:3;
+}
+
+.stat-table .part-name{
+  position:sticky;
+  right:0;
+  z-index:4;
+  background:#eaf3fa;
+}
+
+.stat-table .start-cell{
+  position:sticky;
+  right:110px;
+  z-index:4;
+  background:#fff;
+}
+
+.stat-table .date-head,
+.stat-table .day-cell{
+  min-width:0;
+  width:auto;
+}
+
+.day-header{
+  font-weight:bold;
+  line-height:1.6;
+}
+
+.day-header small{
+  font-weight:normal;
+}
+
+.stat-actions{
+  margin-top:10px;
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.saved-info{
+  margin-top:8px;
+  padding:7px;
+  background:#eef8ee;
+  border:1px solid #b9d9b9;
+  border-radius:5px;
+  font-size:13px;
+}
+
+.print-stat-report{
+  display:none;
+}
+
+/* برش کل */
+.market-cell{
+  min-width:55px;
+}
+
+.market-check{
+  width:18px;
+  height:18px;
+  accent-color:#198754;
+}
+
+.market-row{
+  background:#d9f2dc!important;
+}
+
+.market-row td{
+  background:#d9f2dc!important;
+}
+
+.range-controls{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.range-controls input,
+.range-controls select{
+  width:155px;
+}
+
+.range-info{
+  line-height:1.8;
+  margin:8px 0;
+  font-size:13px;
+}
+
+.backup-table-wrapper{
+  max-height:560px;
+  overflow:auto;
+  margin-top:12px;
+  border:1px solid #ccc;
+  border-radius:6px;
+}
+
+.backup-table-wrapper table{
+  margin-top:0;
+  width:max-content;
+  min-width:0;
+}
+
+.backup-table-wrapper thead th{
+  position:sticky;
+  top:0;
+  background:#f7f7f7;
+  z-index:2;
+}
+
+.backup-table-wrapper td:first-child{
+  font-weight:bold;
+}
+
+.backup-table-wrapper .market-row td{
+  background:#d9f2dc!important;
+}
+
+.danger{
+  border-color:#d66;
+  background:#fff4f4;
+}
+
+hr{
+  margin:14px 0;
+  border:0;
+  border-top:1px solid #ccc;
+}
+
+/* موبایل */
+@media(max-width:600px){
+
+  body{
+    font-size:13px;
+  }
+
+  .box{
+    padding:6px;
+  }
+
+  .main-menu{
+    gap:3px;
+    padding:4px;
+    margin-bottom:8px;
+  }
+
+  .main-menu button{
+    flex:1 1 auto;
+    min-width:0;
+    padding:6px 7px;
+    font-size:12px;
+  }
+
+  .panel{
+    padding:9px;
+  }
+
+  h3{
+    font-size:16px;
+    margin-bottom:8px;
+  }
+
+  button,
+  input,
+  select{
+    font-size:13px;
+    padding:6px 7px;
+  }
+
+  input,
+  select{
+    width:150px;
+  }
+
+  .stat-settings{
+    grid-template-columns:115px minmax(130px,180px);
+    gap:5px 6px;
+  }
+
+  .stat-settings button{
+    grid-column:1/-1;
+    width:auto;
+  }
+
+  .range-controls{
+    gap:5px;
+  }
+
+  .range-controls input,
+  .range-controls select{
+    width:135px;
+  }
+
+  .customer-row button,
+  .part-row button{
+    flex:0 0 auto;
+    padding:5px 7px;
+    font-size:12px;
+  }
+
+  .stat-start-input{
+    width:120px!important;
+  }
+
+  .stat-table{
+    font-size:12px;
+  }
+
+  .stat-table th,
+  .stat-table td{
+    padding:4px 6px;
+  }
+}
+
+/* چاپ */
+@media print{
+
+  @page{
+    size:A4 landscape;
+    margin:8mm;
+  }
+
+  body{
+    background:#fff;
+  }
+
+  .box{
+    max-width:none;
+    padding:0;
+  }
+
+  .main-menu,
+  .stat-settings,
+  .stat-actions,
+  .no-print,
+  .saved-info{
+    display:none!important;
+  }
+
+  .tab{
+    display:none!important;
+  }
+
+  #stat{
+    display:block!important;
+  }
+
+  .panel{
+    box-shadow:none;
+    padding:0;
+  }
+
+  .stat-table-wrapper{
+    max-height:none;
+    overflow:visible;
+    border:0;
+  }
+
+  .stat-table{
+    min-width:0;
+    width:100%;
+    font-size:11px;
+  }
+
+  .stat-table th{
+    position:static;
+  }
+
+  .stat-table .part-name,
+  .stat-table .start-cell{
+    position:static;
+  }
+
+  .screen-stat-report{
+    display:none!important;
+  }
+
+  .print-stat-report{
+    display:block!important;
+  }
+
+  .print-stat-part{
+    page-break-after:always;
+    break-after:page;
+    margin-bottom:0;
+  }
+
+  .print-stat-part:last-child{
+    page-break-after:auto;
+    break-after:auto;
+  }
+
+  .print-stat-part h3{
+    font-size:16px;
+    margin:0 0 8px;
+    text-align:center;
+  }
+
+  .print-stat-part .stat-table{
+    width:auto;
+    table-layout:auto;
+    margin:0 auto;
+  }
+
+  .print-stat-part .stat-table th,
+  .print-stat-part .stat-table td{
+    width:auto;
+    min-width:0;
+    padding:4px 8px;
+  }
+
+  .print-stat-part .stat-table .date-head,
+  .print-stat-part .stat-table .day-cell{
+    width:auto;
+    min-width:0;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <div class="main-menu no-print">
+    <button onclick="openTab('cut',this)">دفتر برش</button>
+    <button onclick="openTab('stat',this)">آمار</button>
+    <button onclick="openTab('customers',this)">مشتری‌ها</button>
+    <button onclick="openTab('parts',this)">قسمت‌ها</button>
+    <button onclick="openTab('all',this)">برش کل</button>
+    <button onclick="openTab('backup',this)">بکاپ</button>
+  </div>
+
+  <div id="cut" class="tab show">
+    <div class="panel">
+
+      <h3>دفتر برش</h3>
+
+      <input id="code" type="number" placeholder="کد طاقه">
+      <input id="count" type="number" placeholder="تعداد برش">
+
+      <br>
+
+      <select id="customerSelect"></select>
+
+      <br>
+
+      <button id="saveBtn">ذخیره</button>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>کد طاقه</th>
+              <th>تعداد برش</th>
+              <th>مشتری</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="stat" class="tab">
+    <div class="panel">
+
+      <h3 class="no-print">آمار هفتگی</h3>
+
+      <div class="stat-settings no-print">
+
+        <label>ماه شروع:</label>
+        <select id="statMonthSelect"></select>
+
+        <label>روز شروع:</label>
+        <select id="statDaySelect"></select>
+
+        <label>روز هفته:</label>
+        <select id="statWeekdaySelect">
+          <option value="0">شنبه</option>
+          <option value="1">یکشنبه</option>
+          <option value="2">دوشنبه</option>
+          <option value="3">سه‌شنبه</option>
+          <option value="4">چهارشنبه</option>
+          <option value="5">پنجشنبه</option>
+        </select>
+
+        <label>تعداد شمارش روزانه:</label>
+        <input
+          id="statDailyTarget"
+          type="number"
+          min="1"
+          placeholder="مثلاً 100"
+        >
+
+        <label>تعطیلات دستی:</label>
+        <input
+          id="statHolidays"
+          type="text"
+          placeholder="مثلاً 6,16,23"
+        >
+
+        <button id="prepareStatBtn">آماده‌سازی قسمت‌ها</button>
+
+      </div>
+
+      <div id="statStarts" class="stat-starts no-print"></div>
+
+      <div
+        class="stat-actions no-print"
+        id="statRunActions"
+        style="display:none"
+      >
+        <button id="buildStatBtn">شروع شمارش</button>
+        <button id="saveStatBtn">ذخیره گزارش و وضعیت شمارش</button>
+        <button id="printPdfBtn">چاپ / ذخیره PDF A4 عریض</button>
+      </div>
+
+      <div id="statReport"></div>
+
+    </div>
+  </div>
+
+  <div id="customers" class="tab">
+    <div class="panel">
+
+      <h3>مشتری‌ها</h3>
+
+      <input
+        id="customerName"
+        type="text"
+        placeholder="نام مشتری"
+      >
+
+      <button id="customerSaveBtn">افزودن مشتری</button>
+
+      <div id="customerList"></div>
+
+      <hr>
+
+      <div class="no-print">
+
+        <label>کد بعدی ثبت:</label>
+
+        <input
+          id="nextCodeInput"
+          type="number"
+        >
+
+        <button onclick="setNextCode()">اعمال کد</button>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div id="parts" class="tab">
+    <div class="panel">
+
+      <h3>قسمت‌ها</h3>
+
+      <input
+        id="partName"
+        type="text"
+        placeholder="نام قسمت"
+      >
+
+      <button id="partSaveBtn">افزودن قسمت</button>
+
+      <div id="partList"></div>
+
+    </div>
+  </div>
+
+  <div id="all" class="tab">
+    <div class="panel">
+
+      <h3>برش کل</h3>
+
+      <div class="no-print range-controls">
+
+        <input
+          id="fromCode"
+          type="number"
+          placeholder="از کد"
+        >
+
+        <input
+          id="toCode"
+          type="number"
+          placeholder="تا کد"
+        >
+
+        <select id="allCustomerSelect"></select>
+
+        <button id="showRangeBtn">نمایش</button>
+
+        <button id="showAllBtn">نمایش همه</button>
+
+      </div>
+
+      <div id="rangeInfo" class="range-info"></div>
+
+      <div class="backup-table-wrapper">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>روانه بازار</th>
+              <th>کد طاقه</th>
+              <th>تعداد برش</th>
+              <th>مشتری</th>
+            </tr>
+          </thead>
+
+          <tbody id="allRecords"></tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div id="backup" class="tab">
+    <div class="panel">
+
+      <h3>بکاپ و بازیابی</h3>
+
+      <p>
+        تمام اطلاعات شامل رکوردها، مشتری‌ها، قسمت‌ها،
+        وضعیت روانه بازار، تنظیمات کد و گزارش‌های آمار هفتگی
+        در فایل پشتیبان ذخیره می‌شود.
+      </p>
+
+      <button onclick="exportBackup()">
+        خروجی گرفتن از کل اطلاعات
+      </button>
+
+      <br><br>
+
+      <input
+        id="importFile"
+        type="file"
+        accept=".json"
+      >
+
+      <button onclick="importBackup()">بازیابی اطلاعات</button>
+
+      <hr>
+
+      <button
+        class="danger"
+        onclick="resetDatabase()"
+      >
+        پاک کردن همه اطلاعات
+      </button>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+let records=JSON.parse(localStorage.getItem("records")||"[]");
+
+let nextCode=Number(
+  localStorage.getItem("nextCode")||1
+);
+
+let customers=JSON.parse(
+  localStorage.getItem("customers")||"[]"
+);
+
+/*
+  قسمت‌ها در نسخه جدید فقط نام دارند.
+  اگر اطلاعات قدیمی شامل price باشد، قیمت نادیده گرفته می‌شود.
+*/
+let parts=JSON.parse(
+  localStorage.getItem("parts")||"[]"
+).map(p=>({
+  name:String(p.name||"").trim()
+})).filter(p=>p.name);
+
+let marketCodes=JSON.parse(
+  localStorage.getItem("marketCodes")||"{}"
+);
+
+let statHistory=JSON.parse(
+  localStorage.getItem("statHistory")||"{}"
+);
+
+let currentStatData=null;
+
+const code=document.getElementById("code");
+const count=document.getElementById("count");
+const customerSelect=document.getElementById("customerSelect");
+
+let editingCode=null;
+
+
+/* ذخیره نسخه پاک‌شده قسمت‌ها */
+localStorage.setItem("parts",JSON.stringify(parts));
+
+
+function init(){
+
+  code.value=nextCode;
+  code.readOnly=true;
+
+  document.getElementById("nextCodeInput").value=nextCode;
+
+  buildStatDateSelectors();
+
+  render();
+  renderCustomerSelect();
+  renderCustomerList();
+  renderPartList();
+  renderAllCustomerSelect();
+  renderAllRecords();
+
+}
+
+
+/* =========================
+   دفتر برش
+========================= */
+
+function startEdit(targetCode){
+
+  let item=records.find(x=>x.code===targetCode);
+
+  if(!item){
+    alert("رکورد پیدا نشد.");
+    return;
+  }
+
+  editingCode=targetCode;
+
+  code.value=item.code;
+  count.value=item.count;
+
+  customerSelect.value=item.customer||"";
+
+  code.readOnly=false;
+
+  count.focus();
+}
+
+
+function saveEdit(){
+
+  let newCode=Number(code.value);
+  let newCount=Number(count.value);
+  let newCustomer=customerSelect.value;
+
+  if(editingCode===null)return false;
+
+  if(
+    !Number.isInteger(newCode)||
+    newCode<1||
+    newCode>999
+  ){
+    alert("کد طاقه باید بین 1 تا 999 باشد.");
+    return true;
+  }
+
+  if(
+    !Number.isInteger(newCount)||
+    newCount<0
+  ){
+    alert("تعداد برش نامعتبر است.");
+    return true;
+  }
+
+  if(!newCustomer){
+    alert("ابتدا مشتری را انتخاب کنید.");
+    return true;
+  }
+
+  if(
+    newCode!==editingCode &&
+    records.some(x=>x.code===newCode)
+  ){
+
+    if(
+      !confirm(
+        "این کد قبلاً ثبت شده است. جایگزین شود؟"
+      )
+    ){
+      return true;
+    }
+
+    records=records.filter(
+      x=>x.code!==newCode
+    );
+  }
+
+  let item=records.find(
+    x=>x.code===editingCode
+  );
+
+  if(!item){
+    alert("رکورد پیدا نشد.");
+    editingCode=null;
+    return true;
+  }
+
+  if(
+    newCode!==editingCode &&
+    marketCodes[editingCode]!==undefined
+  ){
+
+    marketCodes[newCode]=marketCodes[editingCode];
+
+    delete marketCodes[editingCode];
+
+    saveMarket();
+  }
+
+  item.code=newCode;
+  item.count=newCount;
+  item.customer=newCustomer;
+
+  records.sort(
+    (a,b)=>a.code-b.code
+  );
+
+  localStorage.setItem(
+    "records",
+    JSON.stringify(records)
+  );
+
+  editingCode=null;
+
+  code.readOnly=true;
+
+  nextCode=
+    newCode>=999
+      ?1
+      :newCode+1;
+
+  localStorage.setItem(
+    "nextCode",
+    nextCode
+  );
+
+  code.value=nextCode;
+  count.value="";
+
+  render();
+  renderAllRecords();
+  renderAllCustomerSelect();
+
+  return true;
+}
+
+
+function save(){
+
+  if(editingCode!==null){
+    saveEdit();
+    return;
+  }
+
+  let c=Number(code.value);
+  let n=Number(count.value);
+  let customer=customerSelect.value;
+
+  if(
+    !Number.isInteger(c)||
+    c<1||
+    c>999
+  ){
+    alert("کد طاقه باید بین 1 تا 999 باشد.");
+    return;
+  }
+
+  if(
+    !Number.isInteger(n)||
+    n<0
+  ){
+    alert("تعداد برش نامعتبر است.");
+    return;
+  }
+
+  if(!customer){
+    alert("ابتدا مشتری را انتخاب کنید.");
+    return;
+  }
+
+  let old=records.find(
+    x=>x.code===c
+  );
+
+  if(old){
+
+    if(
+      !confirm(
+        "این کد قبلاً ثبت شده. جایگزین شود؟"
+      )
+    ){
+      return;
+    }
+
+    records=records.filter(
+      x=>x.code!==c
+    );
+  }
+
+  records.push({
+    code:c,
+    count:n,
+    customer
+  });
+
+  records.sort(
+    (a,b)=>a.code-b.code
+  );
+
+  localStorage.setItem(
+    "records",
+    JSON.stringify(records)
+  );
+
+  nextCode=
+    c>=999
+      ?1
+      :c+1;
+
+  localStorage.setItem(
+    "nextCode",
+    nextCode
+  );
+
+  code.value=nextCode;
+  count.value="";
+  code.readOnly=true;
+  count.focus();
+
+  render();
+  renderAllRecords();
+  renderAllCustomerSelect();
+
+}
+
+
+function render(){
+
+  let data=
+    records
+      .slice(-10)
+      .reverse();
+
+  document.getElementById("rows").innerHTML=
+    data.map(x=>
+
+      `<tr>
+        <td>${x.code}</td>
+        <td>${formatNumber(x.count)}</td>
+        <td>${escapeHtml(x.customer||"-")}</td>
+        <td>
+          <button
+            type="button"
+            onclick="startEdit(${x.code})"
+          >
+            ویرایش
+          </button>
+        </td>
+      </tr>`
+
+    ).join("");
+
+}
+
+
+function renderCustomerSelect(){
+
+  let select=customerSelect;
+
+  let current=
+    localStorage.getItem("lastCustomer")||
+    select.value||
+    "";
+
+  select.innerHTML=
+    `<option value="">انتخاب مشتری</option>`+
+    customers.map(c=>
+      `<option value="${escapeHtml(c)}">
+        ${escapeHtml(c)}
+      </option>`
+    ).join("");
+
+  if(customers.includes(current)){
+    select.value=current;
+  }
+  else if(customers.length===1){
+    select.value=customers[0];
+  }
+
+}
+
+
+customerSelect.addEventListener(
+  "change",
+  ()=>{
+    if(customerSelect.value){
+      localStorage.setItem(
+        "lastCustomer",
+        customerSelect.value
+      );
+    }
+  }
+);
+
+
+code.addEventListener(
+  "keydown",
+  e=>{
+    if(e.key==="Enter"){
+      e.preventDefault();
+      count.focus();
+    }
+  }
+);
+
+
+count.addEventListener(
+  "keydown",
+  e=>{
+    if(e.key==="Enter"){
+      e.preventDefault();
+      save();
+    }
+  }
+);
+
+
+document.getElementById(
+  "saveBtn"
+).onclick=save;
+
+
+/* =========================
+   مشتری‌ها
+========================= */
+
+function addCustomer(){
+
+  let input=
+    document.getElementById("customerName");
+
+  let name=input.value.trim();
+
+  if(!name){
+    alert("نام مشتری را وارد کنید.");
+    return;
+  }
+
+  if(customers.includes(name)){
+    alert("این مشتری قبلاً تعریف شده است.");
+    return;
+  }
+
+  customers.push(name);
+
+  localStorage.setItem(
+    "customers",
+    JSON.stringify(customers)
+  );
+
+  input.value="";
+
+  renderCustomerSelect();
+  renderCustomerList();
+  renderAllCustomerSelect();
+
+  if(!localStorage.getItem("lastCustomer")){
+
+    customerSelect.value=name;
+
+    localStorage.setItem(
+      "lastCustomer",
+      name
+    );
+
+  }
+
+}
+
+
+function renderCustomerList(){
+
+  document.getElementById(
+    "customerList"
+  ).innerHTML=
+
+    customers.map((c,i)=>
+
+      `<div class="customer-row">
+
+        <span>
+          ${escapeHtml(c)}
+        </span>
+
+        <button
+          type="button"
+          onclick="editCustomer(${i})"
+        >
+          ویرایش
+        </button>
+
+        <button
+          type="button"
+          onclick="deleteCustomer(${i})"
+        >
+          حذف
+        </button>
+
+      </div>`
+
+    ).join("");
+
+}
+
+
+function editCustomer(index){
+
+  let oldName=customers[index];
+
+  let newName=
+    prompt(
+      "نام جدید مشتری:",
+      oldName
+    );
+
+  if(newName===null)return;
+
+  newName=newName.trim();
+
+  if(!newName){
+    alert("نام مشتری نمی‌تواند خالی باشد.");
+    return;
+  }
+
+  if(
+    newName!==oldName &&
+    customers.includes(newName)
+  ){
+    alert("این نام مشتری قبلاً وجود دارد.");
+    return;
+  }
+
+  customers[index]=newName;
+
+  records.forEach(r=>{
+    if(r.customer===oldName){
+      r.customer=newName;
+    }
+  });
+
+  if(
+    localStorage.getItem("lastCustomer")===
+    oldName
+  ){
+    localStorage.setItem(
+      "lastCustomer",
+      newName
+    );
+  }
+
+  localStorage.setItem(
+    "customers",
+    JSON.stringify(customers)
+  );
+
+  localStorage.setItem(
+    "records",
+    JSON.stringify(records)
+  );
+
+  renderCustomerSelect();
+  renderCustomerList();
+  render();
+  renderAllRecords();
+  renderAllCustomerSelect();
+
+}
+
+
+function deleteCustomer(index){
+
+  let name=customers[index];
+
+  if(
+    records.some(
+      r=>r.customer===name
+    )
+  ){
+    alert(
+      "این مشتری در رکوردهای ثبت‌شده استفاده شده و حذف نمی‌شود."
+    );
+    return;
+  }
+
+  if(
+    !confirm(
+      `مشتری «${name}» حذف شود؟`
+    )
+  ){
+    return;
+  }
+
+  customers.splice(index,1);
+
+  localStorage.setItem(
+    "customers",
+    JSON.stringify(customers)
+  );
+
+  if(
+    localStorage.getItem("lastCustomer")===
+    name
+  ){
+    localStorage.removeItem(
+      "lastCustomer"
+    );
+  }
+
+  renderCustomerSelect();
+  renderCustomerList();
+  renderAllCustomerSelect();
+
+}
+
+
+document.getElementById(
+  "customerSaveBtn"
+).onclick=addCustomer;
+
+
+/* =========================
+   قسمت‌ها
+   بدون قیمت
+========================= */
+
+function addPart(){
+
+  let name=
+    document
+      .getElementById("partName")
+      .value
+      .trim();
+
+  if(!name){
+    alert("نام قسمت را وارد کنید.");
+    return;
+  }
+
+  if(
+    parts.some(
+      p=>p.name===name
+    )
+  ){
+    alert("این قسمت قبلاً وجود دارد.");
+    return;
+  }
+
+  parts.push({
+    name:name
+  });
+
+  localStorage.setItem(
+    "parts",
+    JSON.stringify(parts)
+  );
+
+  document.getElementById(
+    "partName"
+  ).value="";
+
+  renderPartList();
+
+}
+
+
+function renderPartList(){
+
+  document.getElementById(
+    "partList"
+  ).innerHTML=
+
+    parts.map((p,i)=>
+
+      `<div class="part-row">
+
+        <span>
+          ${escapeHtml(p.name)}
+        </span>
+
+        <button
+          type="button"
+          onclick="editPart(${i})"
+        >
+          ویرایش
+        </button>
+
+        <button
+          type="button"
+          onclick="deletePart(${i})"
+        >
+          حذف
+        </button>
+
+      </div>`
+
+    ).join("");
+
+}
+
+
+function editPart(index){
+
+  let p=parts[index];
+
+  let newName=
+    prompt(
+      "نام قسمت:",
+      p.name
+    );
+
+  if(newName===null)return;
+
+  newName=newName.trim();
+
+  if(!newName){
+    alert("نام قسمت نمی‌تواند خالی باشد.");
+    return;
+  }
+
+  if(
+    newName!==p.name &&
+    parts.some(
+      x=>x.name===newName
+    )
+  ){
+    alert("این نام قسمت قبلاً وجود دارد.");
+    return;
+  }
+
+  p.name=newName;
+
+  localStorage.setItem(
+    "parts",
+    JSON.stringify(parts)
+  );
+
+  renderPartList();
+
+}
+
+
+function deletePart(index){
+
+  let name=parts[index].name;
+
+  if(
+    !confirm(
+      `قسمت «${name}» حذف شود؟`
+    )
+  ){
+    return;
+  }
+
+  parts.splice(index,1);
+
+  localStorage.setItem(
+    "parts",
+    JSON.stringify(parts)
+  );
+
+  renderPartList();
+
+}
+
+
+document.getElementById(
+  "partSaveBtn"
+).onclick=addPart;
+
+
+/* =========================
+   تقویم و آمار
+========================= */
+
+function pad2(n){
+  return String(n).padStart(2,"0");
+}
+
+const faMonths=[
+  "فروردین",
+  "اردیبهشت",
+  "خرداد",
+  "تیر",
+  "مرداد",
+  "شهریور",
+  "مهر",
+  "آبان",
+  "آذر",
+  "دی",
+  "بهمن",
+  "اسفند"
+];
+
+const faWeek=[
+  "شنبه",
+  "یکشنبه",
+  "دوشنبه",
+  "سه‌شنبه",
+  "چهارشنبه",
+  "پنجشنبه",
+  "جمعه"
+];
+
+const faShort=[
+  "ش","ی","د","س","چ","پ","ج"
+];
+
+
+function normalizeDigits(v){
+
+  return String(v)
+    .replace(
+      /[۰-۹]/g,
+      d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)
+    )
+    .replace(
+      /[٠-٩]/g,
+      d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)
+    );
+
+}
+
+
+function persianParts(date){
+
+  let f=
+    new Intl.DateTimeFormat(
+      "en-US-u-ca-persian",
+      {
+        year:"numeric",
+        month:"numeric",
+        day:"numeric"
+      }
+    ).formatToParts(date);
+
+  let y=Number(
+    f.find(x=>x.type==="year").value
+  );
+
+  let m=Number(
+    f.find(x=>x.type==="month").value
+  );
+
+  let d=Number(
+    f.find(x=>x.type==="day").value
+  );
+
+  return {y,m,d};
+
+}
+
+
+function gregorianISO(date){
+
+  return `${date.getFullYear()}-${
+    pad2(date.getMonth()+1)
+  }-${pad2(date.getDate())}`;
+
+}
+
+
+function dateFromISO(iso){
+
+  let [y,m,d]=
+    iso.split("-").map(Number);
+
+  return new Date(y,m-1,d);
+
+}
+
+
+function faNum(n){
+
+  return String(n).replace(
+    /\d/g,
+    d=>"۰۱۲۳۴۵۶۷۸۹"[d]
+  );
+
+}
+
+
+function formatPersianDate(date){
+
+  let p=persianParts(date);
+
+  return `${
+    faNum(p.d)
+  } ${
+    faMonths[p.m-1]
+  } ${
+    faNum(p.y)
+  }`;
+
+}
+
+
+function weekdayIndex(date){
+
+  return (date.getDay()+1)%7;
+}
+
+
+/* Jalali/Persian calendar conversion */
+function jalaliToGregorian(jy,jm,jd){
+
+  jy=Number(jy);
+  jm=Number(jm);
+  jd=Number(jd);
+
+  let base=
+    new Date(
+      jy+621,
+      2,
+      19,
+      12,
+      0,
+      0
+    );
+
+  for(let i=-10;i<=380;i++){
+
+    let x=new Date(base);
+
+    x.setDate(
+      base.getDate()+i
+    );
+
+    let p=persianParts(x);
+
+    if(
+      p.y===jy &&
+      p.m===jm &&
+      p.d===jd
+    ){
+      return x;
+    }
+
+  }
+
+  return new Date(NaN);
+
+}
+
+
+function isValidJalaliDate(y,m,d){
+
+  let x=
+    jalaliToGregorian(
+      y,m,d
+    );
+
+  let p=persianParts(x);
+
+  return(
+    p.y===y &&
+    p.m===m &&
+    p.d===d
+  );
+
+}
+
+
+function jalaliMonthLength(year,month){
+
+  if(
+    month>=1 &&
+    month<=6
+  ){
+    return 31;
+  }
+
+  if(
+    month>=7 &&
+    month<=11
+  ){
+    return 30;
+  }
+
+  return isPersianLeapYear(year)
+    ?30
+    :29;
+
+}
+
+
+function isPersianLeapYear(year){
+
+  let epBase=
+    year-
+    (
+      year>=0
+        ?474
+        :473
+    );
+
+  let epYear=
+    474+
+    (
+      (
+        epBase%2820+
+        2820
+      )%2820
+    );
+
+  return(
+    (
+      (epYear+38)*682
+    )%2816
+  )<682;
+
+}
+
+
+function buildStatDateSelectors(){
+
+  const monthSel=
+    document.getElementById(
+      "statMonthSelect"
+    );
+
+  const daySel=
+    document.getElementById(
+      "statDaySelect"
+    );
+
+  const weekSel=
+    document.getElementById(
+      "statWeekdaySelect"
+    );
+
+  const today=
+    persianParts(new Date());
+
+  monthSel.innerHTML=
+    faMonths.map(
+      (m,i)=>
+        `<option value="${i+1}">
+          ${m}
+        </option>`
+    ).join("");
+
+  monthSel.value=
+    String(today.m);
+
+  weekSel.innerHTML="";
+
+  [
+    "شنبه",
+    "یکشنبه",
+    "دوشنبه",
+    "سه‌شنبه",
+    "چهارشنبه",
+    "پنجشنبه"
+  ].forEach(
+    (name,i)=>{
+      weekSel.add(
+        new Option(
+          name,
+          String(i)
+        )
+      );
+    }
+  );
+
+  populateStatDays(
+    today.m,
+    today.d
+  );
+
+  monthSel.onchange=()=>{
+
+    const m=
+      Number(monthSel.value);
+
+    const oldDay=
+      Number(daySel.value)||1;
+
+    const max=
+      jalaliMonthLength(
+        today.y,
+        m
+      );
+
+    const newDay=
+      Math.min(
+        oldDay,
+        max
+      );
+
+    populateStatDays(
+      m,
+      newDay
+    );
+
+    resetStatDraft();
+
+  };
+
+  daySel.onchange=()=>{
+
+    updateStatWeekday();
+    resetStatDraft();
+
+  };
+
+  weekSel.onchange=()=>{
+
+    resetStatDraft();
+
+  };
+
+  updateStatWeekday();
+
+}
+
+
+function populateStatDays(
+  month,
+  selectedDay
+){
+
+  const daySel=
+    document.getElementById(
+      "statDaySelect"
+    );
+
+  const year=
+    persianParts(new Date()).y;
+
+  const max=
+    jalaliMonthLength(
+      year,
+      month
+    );
+
+  const d=
+    Math.min(
+      Math.max(
+        Number(selectedDay)||1,
+        1
+      ),
+      max
+    );
+
+  daySel.innerHTML="";
+
+  for(
+    let i=1;
+    i<=max;
+    i++
+  ){
+
+    daySel.add(
+      new Option(
+        faNum(i),
+        String(i)
+      )
+    );
+
+  }
+
+  daySel.value=
+    String(d);
+
+  updateStatWeekday();
+
+}
+
+
+function updateStatWeekday(){
+
+  const year=
+    persianParts(new Date()).y;
+
+  const month=
+    Number(
+      document.getElementById(
+        "statMonthSelect"
+      ).value
+    );
+
+  const day=
+    Number(
+      document.getElementById(
+        "statDaySelect"
+      ).value
+    );
+
+  if(!month||!day)return;
+
+  const date=
+    jalaliToGregorian(
+      year,
+      month,
+      day
+    );
+
+  if(isNaN(date.getTime()))return;
+
+  const wi=
+    weekdayIndex(date);
+
+  document.getElementById(
+    "statWeekdaySelect"
+  ).value=
+    String(wi);
+
+}
+
+
+function resetStatDraft(){
+
+  currentStatData=null;
+
+  let starts=
+    document.getElementById(
+      "statStarts"
+    );
+
+  let actions=
+    document.getElementById(
+      "statRunActions"
+    );
+
+  let report=
+    document.getElementById(
+      "statReport"
+    );
+
+  if(starts)
+    starts.innerHTML="";
+
+  if(actions)
+    actions.style.display="none";
+
+  if(report)
+    report.innerHTML="";
+
+}
+
+
+function getSelectedDate(){
+
+  const y=
+    persianParts(new Date()).y;
+
+  const m=
+    Number(
+      document.getElementById(
+        "statMonthSelect"
+      ).value
+    );
+
+  const d=
+    Number(
+      document.getElementById(
+        "statDaySelect"
+      ).value
+    );
+
+  return jalaliToGregorian(
+    y,m,d
+  );
+
+}
+
+
+function parseHolidayDays(text){
+
+  return new Set(
+    (text||"")
+      .split(/[,،\s]+/)
+      .map(
+        x=>Number(x.trim())
+      )
+      .filter(
+        x=>
+          Number.isInteger(x)&&
+          x>=1&&
+          x<=31
+      )
+  );
+
+}
+
+
+function weekDatesFrom(
+  startDate,
+  holidayDays
+){
+
+  let result=[];
+  let d=new Date(startDate);
+
+  for(
+    let i=0;
+    i<7;
+    i++
+  ){
+
+    let x=new Date(d);
+
+    let wi=
+      weekdayIndex(x);
+
+    let p=
+      persianParts(x);
+
+    if(wi===6)break;
+
+    if(!holidayDays.has(p.d)){
+      result.push(x);
+    }
+
+    d.setDate(
+      d.getDate()+1
+    );
+
+  }
+
+  return result;
+
+}
+
+
+function codeExists(c){
+
+  return records.some(
+    r=>r.code===c
+  );
+
+}
+
+
+function nextCodeAfter(c){
+
+  return c>=999
+    ?1
+    :c+1;
+
+}
+
+
+function calculateDay(
+  startCode,
+  target
+){
+
+  let map={};
+
+  records.forEach(
+    x=>{
+      map[x.code]=
+        Number(x.count)||0;
+    }
+  );
+
+  let current=startCode;
+  let sum=0;
+  let last=null;
+  let guard=0;
+
+  while(
+    sum<target &&
+    guard<999
+  ){
+
+    if(
+      map[current]===undefined
+    ){
+      break;
+    }
+
+    sum+=map[current];
+
+    last=current;
+
+    current=
+      nextCodeAfter(current);
+
+    guard++;
+
+  }
+
+  return{
+    start:startCode,
+    end:last,
+    count:sum,
+    complete:sum>=target,
+    next:
+      last===null
+        ?startCode
+        :nextCodeAfter(last)
+  };
+
+}
+
+
+function getWeekKey(startDate){
+
+  return gregorianISO(
+    startDate
+  );
+
+}
+
+
+function previousStateForPart(
+  partName
+){
+
+  let entries=
+    Object.values(statHistory)
+      .filter(
+        h=>
+          h&&
+          h.parts&&
+          h.parts[partName]&&
+          h.saved
+      );
+
+  entries.sort(
+    (a,b)=>
+      (a.savedAt||"")
+      .localeCompare(
+        b.savedAt||""
+      )
+  );
+
+  if(!entries.length)
+    return null;
+
+  return entries[
+    entries.length-1
+  ].parts[partName];
+
+}
+
+
+function prepareStat(){
+
+  resetStatDraft();
+
+  if(!parts.length){
+
+    alert(
+      "ابتدا در تب قسمت‌ها حداقل یک قسمت تعریف کنید."
+    );
+
+    return;
+  }
+
+  let target=
+    Number(
+      document.getElementById(
+        "statDailyTarget"
+      ).value
+    );
+
+  if(
+    !Number.isInteger(target)||
+    target<1
+  ){
+
+    alert(
+      "تعداد شمارش روزانه باید بیشتر از صفر باشد."
+    );
+
+    return;
+  }
+
+  let startDate=
+    getSelectedDate();
+
+  if(
+    isNaN(
+      startDate.getTime()
+    )
+  ){
+
+    alert(
+      "تاریخ انتخاب‌شده معتبر نیست."
+    );
+
+    return;
+  }
+
+  let selectedDay=
+    Number(
+      document.getElementById(
+        "statWeekdaySelect"
+      ).value
+    );
+
+  if(
+    !Number.isInteger(selectedDay)||
+    selectedDay<0||
+    selectedDay>5
+  ){
+
+    alert(
+      "روز شروع هفته را از شنبه تا پنجشنبه انتخاب کنید."
+    );
+
+    return;
+  }
+
+  let holidays=
+    parseHolidayDays(
+      document.getElementById(
+        "statHolidays"
+      ).value
+    );
+
+  let dates=
+    weekDatesFrom(
+      startDate,
+      holidays
+    );
+
+  if(
+    weekdayIndex(startDate)===6
+  ){
+
+    let base=
+      new Date(startDate);
+
+    let delta=
+      (
+        selectedDay-
+        weekdayIndex(base)+
+        7
+      )%7;
+
+    if(delta===0)
+      delta=7;
+
+    base.setDate(
+      base.getDate()+delta
+    );
+
+    dates=
+      weekDatesFrom(
+        base,
+        holidays
+      );
+
+    startDate=base;
+
+  }
+
+  if(!dates.length){
+
+    alert(
+      "برای تاریخ انتخاب‌شده روز کاری قابل شمارش پیدا نشد."
+    );
+
+    return;
+  }
+
+  let key=
+    getWeekKey(startDate);
+
+  let rows=
+    parts.map(
+      p=>({
+        part:p,
+        initialCode:"",
+        nextCode:"",
+        days:[]
+      })
+    );
+
+  currentStatData={
+    key,
+    startDateISO:key,
+    startDate,
+    target,
+    holidays:[...holidays],
+    dates,
+    rows,
+    selectedDay
+  };
+
+  renderStartInputs();
+
+}
+
+
+function renderStartInputs(){
+
+  let d=currentStatData;
+
+  let rows=
+    d.rows.map(
+      (r,i)=>{
+
+        let value=
+          r.initialCode||"";
+
+        return `
+          <tr>
+
+            <td>${i+1}</td>
+
+            <td
+              style="text-align:right;font-weight:bold"
+            >
+              ${escapeHtml(r.part.name)}
+            </td>
+
+            <td>
+              <input
+                class="stat-start-input"
+                data-part-index="${i}"
+                type="number"
+                min="1"
+                max="999"
+                value="${value}"
+                placeholder="اختیاری"
+              >
+            </td>
+
+          </tr>
+        `;
+
+      }
+    ).join("");
+
+  document.getElementById(
+    "statStarts"
+  ).innerHTML=
+
+    `<div class="stat-start-note">
+      کد شروع برای همه قسمت‌ها اجباری نیست.
+      فقط قسمت‌هایی را که قرار است شمارش شوند وارد کنید؛
+      قسمت خالی در نتیجه با «—» نمایش داده می‌شود.
+    </div>
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>ردیف</th>
+          <th>قسمت</th>
+          <th>کد شروع (اختیاری)</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        ${rows}
+      </tbody>
+
+    </table>`;
+
+  document.getElementById(
+    "statRunActions"
+  ).style.display="flex";
+
+  document.querySelectorAll(
+    ".stat-start-input"
+  ).forEach(
+    inp=>{
+
+      inp.addEventListener(
+        "input",
+        ()=>{
+
+          let i=
+            Number(
+              inp.dataset.partIndex
+            );
+
+          let raw=
+            inp.value.trim();
+
+          currentStatData
+            .rows[i]
+            .initialCode=
+              raw===""
+                ?""
+                :Number(raw);
+
+          currentStatData
+            .rows[i]
+            .nextCode=
+              currentStatData
+                .rows[i]
+                .initialCode||"";
+
+        }
+      );
+
+    }
+  );
+
+  document.getElementById(
+    "statReport"
+  ).innerHTML="";
+
+}
+
+
+function buildStat(){
+
+  if(!currentStatData){
+
+    alert(
+      "ابتدا «آماده‌سازی قسمت‌ها» را بزنید."
+    );
+
+    return;
+  }
+
+  let active=0;
+
+  for(
+    let r of currentStatData.rows
+  ){
+
+    if(
+      r.initialCode===""
+    ){
+      continue;
+    }
+
+    if(
+      !Number.isInteger(
+        Number(r.initialCode)
+      )||
+      Number(r.initialCode)<1||
+      Number(r.initialCode)>999
+    ){
+
+      alert(
+        `کد شروع قسمت «${r.part.name}» نامعتبر است.`
+      );
+
+      return;
+    }
+
+    active++;
+
+  }
+
+  if(!active){
+
+    alert(
+      "حداقل برای یک قسمت کد شروع وارد کنید."
+    );
+
+    return;
+  }
+
+  runStatCalculation();
+  renderStatReport();
+
+}
+
+
+function renderStatReport(){
+
+  if(!currentStatData)return;
+
+  let data=
+    currentStatData;
+
+  let activeRows=
+    data.rows.filter(
+      r=>r.initialCode!==""
+    );
+
+  let header=
+    data.dates.map(
+      d=>{
+
+        let p=
+          persianParts(d);
+
+        let wi=
+          weekdayIndex(d);
+
+        return `
+          <th class="date-head">
+            <div class="day-header">
+              ${faWeek[wi]}
+              ${faNum(p.d)}
+              ${faMonths[p.m-1]}
+            </div>
+          </th>
+        `;
+
+      }
+    ).join("");
+
+  function cellHtml(day){
+
+    if(
+      !day||
+      day.count===0
+    ){
+      return `
+        <td class="day-cell"></td>
+      `;
+    }
+
+    return `
+      <td class="day-cell">
+
+        ${
+          day.end===null
+
+          ?`${formatNumber(day.count)}
+            <br>
+            <small>کد پایان: —</small>`
+
+          :`<b>
+              ${formatNumber(day.count)}
+            </b>
+            <br>
+            <small>
+              کد پایان: ${day.end}
+            </small>`
+        }
+
+      </td>
+    `;
+
+  }
+
+  let screenBody=
+    activeRows.map(
+      r=>{
+
+        let cells=
+          r.days
+            .map(cellHtml)
+            .join("");
+
+        return `
+          <tr>
+
+            <td class="part-name">
+              ${escapeHtml(r.part.name)}
+            </td>
+
+            ${cells}
+
+          </tr>
+        `;
+
+      }
+    ).join("");
+
+  let screenHtml=
+
+    `<div
+      class="stat-title"
+      style="
+        text-align:center;
+        font-size:17px;
+        font-weight:bold;
+        margin:7px 0
+      "
+    >
+      آمار هفته از
+      ${formatPersianDate(data.startDate)}
+    </div>
+
+    <div class="stat-table-wrapper screen-stat-report">
+
+      <table class="stat-table">
+
+        <thead>
+
+          <tr>
+            <th class="part-name">
+              قسمت
+            </th>
+
+            ${header}
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${
+            screenBody||
+
+            `<tr>
+              <td
+                colspan="${data.dates.length+1}"
+              >
+                قسمت فعالی برای شمارش انتخاب نشده است.
+              </td>
+            </tr>`
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>`;
+
+  let printParts=
+    activeRows.map(
+      r=>{
+
+        let cells=
+          r.days
+            .map(cellHtml)
+            .join("");
+
+        return `
+          <section
+            class="print-stat-part"
+          >
+
+            <h3>
+              آمار قسمت
+              «${escapeHtml(r.part.name)}»
+              —
+              شروع از
+              ${formatPersianDate(data.startDate)}
+            </h3>
+
+            <table class="stat-table">
+
+              <thead>
+
+                <tr>
+
+                  <th>روز</th>
+
+                  ${
+                    data.dates.map(
+                      d=>{
+
+                        let p=
+                          persianParts(d);
+
+                        let wi=
+                          weekdayIndex(d);
+
+                        return `
+                          <th class="date-head">
+                            ${faWeek[wi]}
+                            ${faNum(p.d)}
+                            ${faMonths[p.m-1]}
+                          </th>
+                        `;
+
+                      }
+                    ).join("")
+                  }
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                <tr>
+
+                  <td class="part-name">
+                    ${escapeHtml(r.part.name)}
+                  </td>
+
+                  ${cells}
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </section>
+        `;
+
+      }
+    ).join("");
+
+  document.getElementById(
+    "statReport"
+  ).innerHTML=
+
+    screenHtml+
+
+    `<div class="print-stat-report">
+      ${printParts}
+    </div>`;
+
+}
+
+
+function runStatCalculation(){
+
+  let data=
+    currentStatData;
+
+  let target=
+    data.target;
+
+  data.rows.forEach(
+    r=>{
+
+      if(
+        r.initialCode===""
+      ){
+
+        r.days=
+          data.dates.map(
+            ()=>({
+              start:null,
+              end:null,
+              count:0,
+              complete:false,
+              next:""
+            })
+          );
+
+        r.nextCode="";
+
+        return;
+      }
+
+      let current=
+        Number(r.initialCode);
+
+      r.days=[];
+
+      data.dates.forEach(
+        ()=>{
+
+          let result=
+            calculateDay(
+              current,
+              target
+            );
+
+          r.days.push(result);
+
+          current=
+            result.next;
+
+        }
+      );
+
+      r.nextCode=
+        current;
+
+    }
+  );
+
+}
+
+
+function saveStat(){
+
+  if(!currentStatData){
+
+    alert(
+      "ابتدا «آماده‌سازی قسمت‌ها» و سپس «شروع شمارش» را بزنید."
+    );
+
+    return;
+  }
+
+  runStatCalculation();
+
+  renderStatReport();
+
+  document.getElementById(
+    "statReport"
+  ).insertAdjacentHTML(
+    "beforeend",
+
+    `<div class="saved-info">
+      این گزارش فقط برای همین نوبت شمارش نمایش داده شد
+      و در حافظه ذخیره نمی‌شود.
+    </div>`
+  );
+
+}
+
+
+document.getElementById(
+  "prepareStatBtn"
+).onclick=prepareStat;
+
+
+document.getElementById(
+  "buildStatBtn"
+).onclick=buildStat;
+
+
+document.getElementById(
+  "saveStatBtn"
+).onclick=saveStat;
+
+
+document.getElementById(
+  "printPdfBtn"
+).onclick=
+  ()=>window.print();
+
+
+/* =========================
+   برش کل
+========================= */
+
+function renderAllCustomerSelect(){
+
+  let s=
+    document.getElementById(
+      "allCustomerSelect"
+    );
+
+  let current=s.value;
+
+  s.innerHTML=
+    `<option value="">
+      همه مشتری‌ها
+    </option>`+
+
+    customers.map(
+      c=>
+        `<option value="${escapeHtml(c)}">
+          ${escapeHtml(c)}
+        </option>`
+    ).join("");
+
+  if(customers.includes(current)){
+    s.value=current;
+  }
+
+}
+
+
+function toggleMarket(c){
+
+  if(marketCodes[c]){
+    delete marketCodes[c];
+  }
+  else{
+    marketCodes[c]=true;
+  }
+
+  saveMarket();
+
+  renderAllRecords(
+    lastAllFilter.from,
+    lastAllFilter.to,
+    lastAllFilter.customer
+  );
+
+}
+
+
+function saveMarket(){
+
+  localStorage.setItem(
+    "marketCodes",
+    JSON.stringify(marketCodes)
+  );
+
+}
+
+
+let lastAllFilter={
+  from:null,
+  to:null,
+  customer:""
+};
+
+
+function renderAllRecords(
+  from,
+  to,
+  customer
+){
+
+  let list=
+    document.getElementById(
+      "allRecords"
+    );
+
+  let info=
+    document.getElementById(
+      "rangeInfo"
+    );
+
+  if(from===undefined)
+    from=null;
+
+  if(to===undefined)
+    to=null;
+
+  if(customer===undefined)
+    customer="";
+
+  lastAllFilter={
+    from,
+    to,
+    customer
+  };
+
+  let filtered=
+    records.filter(
+      x=>
+        (
+          from===null||
+          x.code>=from
+        )&&
+        (
+          to===null||
+          x.code<=to
+        )&&
+        (
+          !customer||
+          x.customer===customer
+        )
+    );
+
+  filtered.sort(
+    (a,b)=>b.code-a.code
+  );
+
+  let sum=
+    filtered.reduce(
+      (s,x)=>
+        s+
+        (
+          Number(x.count)||0
+        ),
+      0
+    );
+
+  let rangeText=
+    (
+      from!==null&&
+      to!==null
+    )
+      ?`بازه کد ${from} تا ${to}`
+      :"همه کدها";
+
+  let custText=
+    customer
+      ?` — مشتری: ${escapeHtml(customer)}`
+      :" — همه مشتری‌ها";
+
+  info.innerHTML=
+    `${rangeText}${custText}
+     <br>
+     تعداد طاقه‌ها:
+     ${formatNumber(filtered.length)}
+     <br>
+     مجموع برش‌ها:
+     ${formatNumber(sum)}`;
+
+  list.innerHTML=
+    filtered.map(
+      x=>{
+
+        let checked=
+          !!marketCodes[x.code];
+
+        let cls=
+          checked
+            ?"market-row"
+            :"";
+
+        return `
+          <tr class="${cls}">
+
+            <td class="market-cell">
+
+              <input
+                class="market-check"
+                type="checkbox"
+                ${checked?"checked":""}
+                onchange="toggleMarket(${x.code})"
+              >
+
+            </td>
+
+            <td>${x.code}</td>
+
+            <td>
+              ${formatNumber(x.count)}
+            </td>
+
+            <td>
+              ${escapeHtml(x.customer||"-")}
+            </td>
+
+          </tr>
+        `;
+
+      }
+    ).join("");
+
+}
+
+
+document.getElementById(
+  "showRangeBtn"
+).onclick=function(){
+
+  let from=
+    Number(
+      document.getElementById(
+        "fromCode"
+      ).value
+    );
+
+  let to=
+    Number(
+      document.getElementById(
+        "toCode"
+      ).value
+    );
+
+  let customer=
+    document.getElementById(
+      "allCustomerSelect"
+    ).value;
+
+  if(
+    !Number.isInteger(from)||
+    from<1||
+    from>999||
+    !Number.isInteger(to)||
+    to<1||
+    to>999
+  ){
+
+    alert(
+      "کدها باید بین 1 تا 999 باشند."
+    );
+
+    return;
+  }
+
+  if(from>to){
+
+    alert(
+      "کد شروع نباید از کد پایان بزرگ‌تر باشد."
+    );
+
+    return;
+  }
+
+  renderAllRecords(
+    from,
+    to,
+    customer
+  );
+
+};
+
+
+document.getElementById(
+  "showAllBtn"
+).onclick=function(){
+
+  document.getElementById(
+    "fromCode"
+  ).value="";
+
+  document.getElementById(
+    "toCode"
+  ).value="";
+
+  renderAllRecords(
+    null,
+    null,
+    document.getElementById(
+      "allCustomerSelect"
+    ).value
+  );
+
+};
+
+
+/* =========================
+   کد بعدی
+========================= */
+
+function setNextCode(){
+
+  let value=
+    Number(
+      document.getElementById(
+        "nextCodeInput"
+      ).value
+    );
+
+  if(
+    !Number.isInteger(value)||
+    value<1||
+    value>999
+  ){
+
+    alert(
+      "کد باید بین 1 تا 999 باشد."
+    );
+
+    return;
+  }
+
+  nextCode=value;
+
+  localStorage.setItem(
+    "nextCode",
+    nextCode
+  );
+
+  code.value=nextCode;
+  code.readOnly=true;
+
+  document.getElementById(
+    "nextCodeInput"
+  ).value=nextCode;
+
+  alert(
+    "کد بعدی تغییر کرد."
+  );
+
+}
+
+
+/* =========================
+   بکاپ
+========================= */
+
+function exportBackup(){
+
+  let backup={
+    version:2,
+    nextCode,
+    records,
+    customers,
+    parts,
+    marketCodes,
+    statHistory,
+    lastCustomer:
+      localStorage.getItem(
+        "lastCustomer"
+      )||""
+  };
+
+  let blob=
+    new Blob(
+      [
+        JSON.stringify(
+          backup,
+          null,
+          2
+        )
+      ],
+      {
+        type:
+          "application/json"
+      }
+    );
+
+  let a=
+    document.createElement("a");
+
+  a.href=
+    URL.createObjectURL(blob);
+
+  a.download=
+    "factory_backup.json";
+
+  a.click();
+
+  setTimeout(
+    ()=>{
+      URL.revokeObjectURL(
+        a.href
+      );
+    },
+    1000
+  );
+
+}
+
+
+function importBackup(){
+
+  let file=
+    document.getElementById(
+      "importFile"
+    ).files[0];
+
+  if(!file){
+
+    alert(
+      "ابتدا فایل پشتیبان را انتخاب کنید."
+    );
+
+    return;
+  }
+
+  let reader=
+    new FileReader();
+
+  reader.onload=function(e){
+
+    try{
+
+      let b=
+        JSON.parse(
+          e.target.result
+        );
+
+      if(!b.records){
+
+        alert(
+          "فایل معتبر نیست."
+        );
+
+        return;
+      }
+
+      records=
+        Array.isArray(b.records)
+          ?b.records
+          :[];
+
+      nextCode=
+        Number(b.nextCode)||1;
+
+      customers=
+        Array.isArray(b.customers)
+          ?b.customers
+          :[];
+
+      /*
+        قیمت‌های قدیمی قسمت‌ها
+        در بازیابی نیز حذف می‌شوند.
+      */
+      parts=
+        Array.isArray(b.parts)
+          ?b.parts
+              .map(
+                p=>({
+                  name:
+                    String(
+                      p.name||""
+                    ).trim()
+                })
+              )
+              .filter(
+                p=>p.name
+              )
+          :[];
+
+      marketCodes=
+        b.marketCodes&&
+        typeof b.marketCodes==="object"
+          ?b.marketCodes
+          :{};
+
+      statHistory=
+        b.statHistory&&
+        typeof b.statHistory==="object"
+          ?b.statHistory
+          :{};
+
+      localStorage.setItem(
+        "records",
+        JSON.stringify(records)
+      );
+
+      localStorage.setItem(
+        "nextCode",
+        nextCode
+      );
+
+      localStorage.setItem(
+        "customers",
+        JSON.stringify(customers)
+      );
+
+      localStorage.setItem(
+        "parts",
+        JSON.stringify(parts)
+      );
+
+      localStorage.setItem(
+        "marketCodes",
+        JSON.stringify(marketCodes)
+      );
+
+      localStorage.setItem(
+        "statHistory",
+        JSON.stringify(statHistory)
+      );
+
+      if(b.lastCustomer){
+
+        localStorage.setItem(
+          "lastCustomer",
+          b.lastCustomer
+        );
+
+      }
+      else{
+
+        localStorage.removeItem(
+          "lastCustomer"
+        );
+
+      }
+
+      code.value=nextCode;
+      code.readOnly=true;
+
+      render();
+      renderCustomerSelect();
+      renderCustomerList();
+      renderPartList();
+      renderAllCustomerSelect();
+      renderAllRecords();
+
+      alert(
+        "بازیابی با موفقیت انجام شد."
+      );
+
+    }
+    catch(err){
+
+      alert(
+        "خطا در خواندن فایل پشتیبان."
+      );
+
+    }
+
+  };
+
+  reader.readAsText(file);
+
+}
+
+
+/* =========================
+   پاک کردن اطلاعات
+========================= */
+
+function resetDatabase(){
+
+  if(
+    !confirm(
+      "همه اطلاعات پاک شود؟ این کار قابل برگشت نیست."
+    )
+  ){
+    return;
+  }
+
+  records=[];
+  nextCode=1;
+  customers=[];
+  parts=[];
+  marketCodes={};
+  statHistory={};
+
+  [
+    "records",
+    "nextCode",
+    "customers",
+    "parts",
+    "marketCodes",
+    "statHistory",
+    "lastCustomer"
+  ].forEach(
+    k=>
+      localStorage.removeItem(k)
+  );
+
+  code.value=1;
+  code.readOnly=true;
+  count.value="";
+
+  render();
+  renderCustomerSelect();
+  renderCustomerList();
+  renderPartList();
+  renderAllCustomerSelect();
+  renderAllRecords();
+
+  document.getElementById(
+    "statReport"
+  ).innerHTML="";
+
+  alert(
+    "اطلاعات با موفقیت پاک شد."
+  );
+
+}
+
+
+/* =========================
+   تب‌ها
+========================= */
+
+function openTab(
+  id,
+  button
+){
+
+  document
+    .querySelectorAll(".tab")
+    .forEach(
+      x=>
+        x.classList.remove("show")
+    );
+
+  document
+    .getElementById(id)
+    .classList.add("show");
+
+  document
+    .querySelectorAll(
+      ".main-menu button"
+    )
+    .forEach(
+      x=>
+        x.classList.remove("active")
+    );
+
+  if(button)
+    button.classList.add("active");
+
+  if(id==="all"){
+
+    renderAllCustomerSelect();
+    renderAllRecords();
+
+  }
+
+  if(id==="customers"){
+
+    renderCustomerList();
+    renderCustomerSelect();
+
+  }
+
+  if(id==="parts"){
+
+    renderPartList();
+
+  }
+
+}
+
+
+function formatNumber(value){
+
+  return Number(
+    value||0
+  ).toLocaleString("fa-IR");
+
+}
+
+
+function escapeHtml(value){
+
+  return String(value)
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+init();
+
+document
+  .querySelector(
+    ".main-menu button"
+  )
+  .classList.add("active");
+
+</script>
+
+</body>
+</html>
