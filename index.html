@@ -73,6 +73,18 @@
              max-width: 220px;
         }
 
+        .work-date-bar {
+            background: #f8f9fa;
+            border: 1px solid #dfe6e9;
+            border-radius: 8px;
+            padding: 10px;
+            justify-content: center;
+        }
+
+        .work-date-bar select {
+            min-width: 150px;
+        }
+
         .code-entry {
              width: 100%;
              max-width: 100%;
@@ -652,9 +664,18 @@
 
         </div>
 
+        <div class="action-bar work-date-bar">
+
+            <label for="work-date-select"><strong>تاریخ کارکرد:</strong></label>
+
+            <select id="work-date-select" onchange="changeWorkDate(this.value)">
+            </select>
+
+        </div>
+
         <div class="info-card">
-            برای ثبت کارکرد، روی «ثبت کد» قسمت موردنظر بزنید،
-            سپس کد طاقه را وارد کنید.
+            تاریخ کارکرد را انتخاب کنید، سپس روی «ثبت کد» قسمت موردنظر بزنید.
+            کدهای ثبت‌شده با همین تاریخ ذخیره می‌شوند و در گزارشات قابل تفکیک هستند.
         </div>
 
         <div class="table-container">
@@ -843,6 +864,9 @@
 
     let calcItems = [];
 
+    /* تاریخ انتخاب‌شده برای ثبت کارکرد */
+    let selectedWorkDate = getPersianDate();
+
 
     /* =========================================================
        ذخیره‌سازی
@@ -893,6 +917,7 @@
         }
 
         if (tabId === 'calc') {
+            populateWorkDateSelect();
             renderCalcTable();
         }
 
@@ -930,6 +955,62 @@
             return now.toLocaleDateString('fa-IR');
 
         }
+    }
+
+
+    /* =========================================================
+       انتخاب تاریخ کارکرد
+       ========================================================= */
+
+    function formatDateForWorkSelect(date) {
+        try {
+            return new Intl.DateTimeFormat(
+                'fa-IR-u-ca-persian',
+                { year: 'numeric', month: '2-digit', day: '2-digit' }
+            ).format(date);
+        } catch (error) {
+            return date.toLocaleDateString('fa-IR');
+        }
+    }
+
+    function populateWorkDateSelect() {
+        const select = document.getElementById('work-date-select');
+        if (!select) return;
+
+        const today = getPersianDate();
+        const dates = new Set();
+
+        /* امروز و 90 روز گذشته */
+        for (let i = 0; i <= 90; i++) {
+            const d = new Date();
+            d.setHours(12, 0, 0, 0);
+            d.setDate(d.getDate() - i);
+            dates.add(formatDateForWorkSelect(d));
+        }
+
+        /* تاریخ‌های قدیمی موجود در کارکردها نیز حفظ شوند */
+        workRecords.forEach(record => {
+            if (record.date) dates.add(record.date);
+        });
+
+        const sortedDates = Array.from(dates);
+        sortedDates.sort((a, b) => dateToNumber(b) - dateToNumber(a));
+
+        if (!dates.has(selectedWorkDate)) {
+            selectedWorkDate = today;
+        }
+
+        select.innerHTML = sortedDates.map(date =>
+            `<option value="${escapeHtml(date)}">${escapeHtml(date)}</option>`
+        ).join('');
+
+        select.value = selectedWorkDate;
+    }
+
+    function changeWorkDate(value) {
+        if (!value) return;
+        selectedWorkDate = value;
+        renderCalcTable();
     }
 
 
@@ -1329,7 +1410,7 @@
         /* ثبت تاریخ شمسی */
 
         const date =
-            getPersianDate();
+            selectedWorkDate;
 
 
         const newRecord = {
@@ -1376,7 +1457,7 @@
 
         workRecords.forEach(record => {
 
-            if (record.part === partName) {
+            if (record.part === partName && record.date === selectedWorkDate) {
 
                 count += Number(record.count) || 0;
 
@@ -1401,7 +1482,9 @@
 
         workRecords.forEach(record => {
 
-            total += Number(record.amount) || 0;
+            if (record.date === selectedWorkDate) {
+                total += Number(record.amount) || 0;
+            }
 
         });
 
